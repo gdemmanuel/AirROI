@@ -148,7 +148,7 @@ export const fetchMarketStats = async (zipCode: string): Promise<any | null> => 
     if (!RENTCAST_API_KEY) return null;
 
     try {
-        const response = await fetch(`https://api.rentcast.io/v1/markets/stats?zipCode=${zipCode}`, {
+        const response = await fetch(`https://api.rentcast.io/v1/markets?zipCode=${zipCode}`, {
             headers: { 'X-Api-Key': RENTCAST_API_KEY, 'Accept': 'application/json' }
         });
 
@@ -178,7 +178,15 @@ export const fetchRentEstimate = async (address: string): Promise<any | null> =>
             return null;
         }
 
-        return await response.json();
+        const data = await response.json();
+        
+        // Log what we got back
+        console.log(`[RentCast] Rent Estimate Response:`, {
+            rent: data.rent,
+            hasComps: data.comparableProperties ? data.comparableProperties.length : 0
+        });
+        
+        return data;
     } catch (error) {
         console.error("Failed to fetch rent estimate from RentCast", error);
         return null;
@@ -186,54 +194,51 @@ export const fetchRentEstimate = async (address: string): Promise<any | null> =>
 };
 
 export const fetchSTRData = async (address: string, propertyType?: string, bedrooms?: number, bathrooms?: number): Promise<any | null> => {
+    // RentCast does NOT have short-term rental data
+    // We'll use Claude web search instead, which is called in App.tsx
+    console.log('[RentCast] Note: RentCast does not support short-term rental data. Using Claude web search instead.');
+    return null;
+}
+
+export const fetchSTRComps = async (address: string, propertyType?: string, bedrooms?: number, bathrooms?: number): Promise<any | null> => {
+    // UPDATED: RentCast rental comps come from the Rent Estimate endpoint's comparable properties
+    // We'll fetch them via a dedicated rental listings endpoint for long-term rentals
     if (!RENTCAST_API_KEY) return null;
 
     try {
         const encodedAddress = encodeURIComponent(address);
-        let url = `https://api.rentcast.io/v1/avm/rent/short-term?address=${encodedAddress}`;
+        let url = `https://api.rentcast.io/v1/listings/rental/long-term?address=${encodedAddress}&radius=5&limit=5`;
         if (propertyType) url += `&propertyType=${encodeURIComponent(propertyType)}`;
         if (bedrooms) url += `&bedrooms=${bedrooms}`;
-        if (bathrooms) url += `&bathrooms=${bathrooms}`;
+
+        console.log(`[RentCast] Fetching LTR comps from: ${url}`);
 
         const response = await fetch(url, {
             headers: { 'X-Api-Key': RENTCAST_API_KEY, 'Accept': 'application/json' }
         });
 
         if (!response.ok) {
-            console.error(`RentCast STR Data Error: ${response.status}`);
+            console.error(`RentCast LTR Comps Error: ${response.status}`);
             return null;
         }
 
         const data = await response.json();
-        console.log(`[RentCast] STR AVM: ADR=$${data.rent}, Occ=${Math.round(data.occupancy * 100)}%`);
+        console.log(`[RentCast] LTR Comps Response:`, data);
+        
+        if (data && Array.isArray(data) && data.length > 0) {
+            console.log(`[RentCast] ✅ Found ${data.length} long-term rental comps`);
+            data.forEach((comp: any, i: number) => {
+                const addr = comp.formattedAddress || comp.address || 'N/A';
+                const rent = comp.rent || comp.listedPrice || 'N/A';
+                console.log(`  ${i + 1}. ${addr}: Rent $${rent}/mo`);
+            });
+        } else {
+            console.warn(`[RentCast] No LTR comps returned (empty array or null)`);
+        }
+        
         return data;
     } catch (error) {
-        console.error("Failed to fetch STR data from RentCast", error);
-        return null;
-    }
-}
-
-export const fetchSTRComps = async (address: string, propertyType?: string, bedrooms?: number, bathrooms?: number): Promise<any | null> => {
-    if (!RENTCAST_API_KEY) return null;
-
-    try {
-        const encodedAddress = encodeURIComponent(address);
-        let url = `https://api.rentcast.io/v1/listings/rental/short-term?address=${encodedAddress}&radius=5&limit=5`;
-        if (propertyType) url += `&propertyType=${encodeURIComponent(propertyType)}`;
-        if (bedrooms) url += `&bedrooms=${bedrooms}`;
-
-        const response = await fetch(url, {
-            headers: { 'X-Api-Key': RENTCAST_API_KEY, 'Accept': 'application/json' }
-        });
-
-        if (!response.ok) {
-            console.error(`RentCast STR Comps Error: ${response.status}`);
-            return null;
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error("Failed to fetch STR comps from RentCast", error);
+        console.error("Failed to fetch LTR comps from RentCast", error);
         return null;
     }
 }

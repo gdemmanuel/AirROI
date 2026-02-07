@@ -87,6 +87,14 @@ export interface MarketInsight {
   marketRiskLevel: 'Low' | 'Medium' | 'High';
   verdict: string;
   sources: { title: string; uri: string }[];
+  
+  // 🔧 NEW: Track data sources for transparency
+  dataSource?: {
+    adrSource: 'RentCast' | 'AI Estimate';
+    occupancySource: 'RentCast' | 'AI Estimate';
+    compsSource: 'RentCast' | 'AI Generated';
+    hasRentCastData: boolean;
+  };
 }
 
 export interface MonthlyProjection {

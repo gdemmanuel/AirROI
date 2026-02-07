@@ -86,9 +86,26 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
     </div>
   );
 
+  // Helper function to format timespan
+  const formatTimespan = (months: number): string => {
+    if (months <= 0) return 'N/A';
+    if (months <= 12) return `${Math.round(months)} mo`;
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    return remainingMonths > 0 ? `${years}y ${remainingMonths}mo` : `${years}y`;
+  };
+
   const lastMonth = filteredData[filteredData.length - 1];
   const totalEquity = (lastMonth?.propertyValue || 0) - (lastMonth?.mortgageBalance || 0);
   const avgMonthlyCashFlow = filteredData.reduce((sum, m) => sum + m.cashFlowAfterDebt, 0) / filteredData.length;
+  
+  // 🔧 FIX: Calculate break-even month correctly
+  const cashFlowBreakEven = breakEvenMonth >= 0 ? breakEvenMonth : -1;
+  const helocPayoffMonth = useMemo(() => {
+    if (!hasHeloc) return -1;
+    const month = filteredData.findIndex(m => m.helocBalance <= 0);
+    return month >= 0 ? month : -1;
+  }, [filteredData, hasHeloc]);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 mx-auto px-4 lg:px-0">

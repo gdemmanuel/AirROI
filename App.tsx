@@ -9,7 +9,7 @@ import {
 import { PropertyConfig, MarketInsight, MonthlyProjection, SavedAssessment, Amenity, RentalStrategy } from './types';
 import { DEFAULT_CONFIG, AMENITIES } from './constants';
 import { calculateMonthlyProjections, aggregateToYearly } from './utils/financialLogic';
-import { analyzeProperty, getAddressSuggestions, suggestAmenityImpact, searchWebForSTRData, runSensitivityAnalysis, runAmenityROI, calculatePathToYes, generateLenderPacket, onRateLimitCountdown } from './services/claudeService';
+import { analyzeProperty, suggestAmenityImpact, searchWebForSTRData, runSensitivityAnalysis, runAmenityROI, calculatePathToYes, generateLenderPacket, onRateLimitCountdown } from './services/claudeService';
 import { SensitivityMatrix, AmenityROIResult, PathToYes, LenderPacket } from './prompts/underwriting';
 import SensitivityTable from './components/SensitivityTable';
 import AmenityROIPanel from './components/AmenityROIPanel';
@@ -143,21 +143,10 @@ const App: React.FC = () => {
   }, [furnishingBreakdown]);
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (propertyInput.length > 8 && !isAnalyzing && !isSelectingRef.current) {
-        try {
-          const results = await getAddressSuggestions(propertyInput);
-          setSuggestions(results);
-          setShowSuggestions(results.length > 0);
-        } catch (e) {
-          console.error("Suggestions failed", e);
-        }
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
+    // Disabled: Address suggestions removed for performance
+    // Users can paste full addresses directly into the input field
+    setSuggestions([]);
+    setShowSuggestions(false);
   }, [propertyInput, isAnalyzing]);
 
 
@@ -480,7 +469,12 @@ const App: React.FC = () => {
   // Selected Amenities Array (must be declared before monthlyData)
   const selectedAmenities = amenities.filter(a => selectedAmenityIds.includes(a.id));
 
-  const monthlyData = useMemo(() => calculateMonthlyProjections(finalConfig, 20, strategy, selectedAmenities), [finalConfig, strategy, selectedAmenities]);
+  // 🔧 FIX: Only calculate financial projections when there's an active property/insight
+  const monthlyData = useMemo(() => {
+    if (!insight) return []; // Clear data when no property is selected
+    return calculateMonthlyProjections(finalConfig, 20, strategy, selectedAmenities);
+  }, [finalConfig, strategy, selectedAmenities, insight]);
+  
   const yearlyData = useMemo(() => aggregateToYearly(monthlyData), [monthlyData]);
   const year1Data = yearlyData?.[0] || null;
   const annualProfit = year1Data?.cashFlowAfterDebt || 0;
@@ -564,10 +558,12 @@ const App: React.FC = () => {
       rentEst = rentRes;
       strData = strRes;
       strComps = compsRes;
+      
+      console.log('[App] RentCast STR Comps:', strComps);
 
       // If RentCast has no STR data, automatically search the web
       if (!strData || !strData.rent || !strData.occupancy) {
-        console.log('[App] RentCast has no STR data, searching web...');
+        console.log('[App] RentCast has no STR data, searching web for market data...');
         const webData = await searchWebForSTRData(target, factual?.bedrooms, factual?.bathrooms);
         if (webData) {
           strData = {
@@ -576,10 +572,15 @@ const App: React.FC = () => {
             source: 'web_search'
           };
           setIsUsingWebData(true);
-          console.log('[App] Using web-sourced STR data:', strData);
+          console.log('[App] ✅ Using web-sourced STR data:', strData);
         }
       } else {
         setIsUsingWebData(false);
+      }
+      
+      // BONUS: If strComps are missing/empty, also try web search for comps
+      if (!strComps || strComps.length === 0) {
+        console.log('[App] No RentCast comps found, will search web in Claude for market comparables...');
       }
     } catch (e) {
       console.warn("Factual fetch failed, falling back to AI intuition", e);
@@ -591,6 +592,8 @@ const App: React.FC = () => {
   const executeAnalysis = async (target: string, factual: RentCastProperty | null, marketStats?: any, rentEstimate?: any, strData?: any, strComps?: any) => {
     setIsAnalyzing(true);
     setShowVerificationModal(false);
+    setShowSuggestions(false); // 🔧 FIX: Hide address suggestions after selecting one
+    setPropertyInput(''); // 🔧 FIX: Clear input to prevent suggestions from re-appearing
 
     // Clear previous advanced analysis data when starting new analysis
     setSensitivityData(null);
@@ -920,11 +923,6 @@ const App: React.FC = () => {
             </button>
           </div>
           {analysisError && <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-4"><AlertTriangle size={20} className="text-[#f43f5e]" /><p className="text-[10px] font-black uppercase text-[#f43f5e] tracking-widest">{analysisError}</p></div>}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 z-[60] overflow-hidden">
-              {suggestions.map((s, idx) => (<button key={idx} onClick={() => { runAnalysis(s); setShowSuggestions(false); }} className="w-full text-left px-8 py-4 text-xs font-black text-slate-700 hover:bg-slate-50 border-b last:border-0 uppercase tracking-tight">{s}</button>))}
-            </div>
-          )}
         </div>
 
         {/* DASHBOARD TAB */}
@@ -945,16 +943,20 @@ const App: React.FC = () => {
                       <div className="flex gap-2">
                         {insight && (
                           <>
-                            <div className="px-2 py-0.5 bg-blue-500/10 border border-blue-400/20 rounded text-[8px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
-                              <Building2 size={10} /> RentCast Verified
-                            </div>
-                            {isUsingWebData ? (
+                            {insight.dataSource?.adrSource && (
+                              <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+                                insight.dataSource.adrSource === 'RentCast' 
+                                  ? 'bg-blue-500/10 border border-blue-400/20 text-blue-400' 
+                                  : insight.dataSource.adrSource === 'Web Search'
+                                  ? 'bg-amber-500/10 border border-amber-400/20 text-amber-400'
+                                  : 'bg-purple-500/10 border border-purple-400/20 text-purple-400'
+                              }`}>
+                                <Building2 size={10} /> {insight.dataSource.adrSource}
+                              </div>
+                            )}
+                            {isUsingWebData && (
                               <div className="px-2 py-0.5 bg-amber-500/10 border border-amber-400/20 rounded text-[8px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
                                 <Sparkles size={10} /> Web Market Intel
-                              </div>
-                            ) : (
-                              <div className="px-2 py-0.5 bg-purple-500/10 border border-purple-400/20 rounded text-[8px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Zap size={10} /> AI Enhanced
                               </div>
                             )}
                           </>
@@ -1002,7 +1004,27 @@ const App: React.FC = () => {
             </div>
 
             <div className="p-5 bg-white rounded-xl border border-slate-100 mb-6">
-              <div className="flex justify-between items-center mb-4"><h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">REVENUE AMENITIES</h4><div className="flex gap-6 text-[13px] font-black uppercase items-center"><span className="text-[#f43f5e]">ADR: {formatCurrency(currentRateValue)}</span><span className="text-[#10b981]">OCC: {year1Data?.occupancy.toFixed(0)}%</span></div></div>
+              <div className="flex justify-between items-center mb-4"><h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">REVENUE AMENITIES</h4><div className="flex gap-6 text-[13px] font-black uppercase items-center">
+                {/* ADR with source badge */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#f43f5e]">ADR: {formatCurrency(currentRateValue)}</span>
+                  {insight?.dataSource?.adrSource && (
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${insight.dataSource.adrSource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {insight.dataSource.adrSource === 'RentCast' ? '✓ RentCast' : 'AI'}
+                    </span>
+                  )}
+                </div>
+                {/* Occupancy with source badge */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#10b981]">OCC: {year1Data?.occupancy.toFixed(0)}%</span>
+                  {insight?.dataSource?.occupancySource && (
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${insight.dataSource.occupancySource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {insight.dataSource.occupancySource === 'RentCast' ? '✓ RentCast' : 'AI'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                 {amenities.filter(a => a.active).map(am => (
                   <div key={am.id} className="relative">
@@ -1048,7 +1070,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] border border-slate-100 flex flex-col"><div className="flex items-center gap-3 mb-8 border-b pb-6"><div className="p-3 bg-rose-50 rounded-xl text-rose-500"><MapPin size={18} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Market Comps</h3></div><div className="space-y-3">{insight.comps.slice(0, 3).map((c, i) => (<div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all group"><p className="text-[11px] font-black text-slate-800 truncate mb-2 uppercase">{c.address}</p><div className="flex justify-between text-[10px] font-black uppercase tracking-tight"><div className="flex gap-3"><span className="text-slate-400">{c.price}</span><span className="text-emerald-600">{c.annualRevenue} REV</span></div><div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{((parseInt(c.annualRevenue.replace(/[^0-9]/g, '')) / (parseInt(c.price.replace(/[^0-9]/g, '')) || 1)) * 100).toFixed(1)}% YIELD</div></div></div>))}</div></div>
+              <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] border border-slate-100 flex flex-col"><div className="flex items-center gap-3 mb-8 border-b pb-6"><div className="p-3 bg-rose-50 rounded-xl text-rose-500"><MapPin size={18} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Market Comps</h3>{insight.dataSource?.compsSource && <span className={`ml-auto text-[8px] font-black px-2 py-1 rounded-full ${insight.dataSource.compsSource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{insight.dataSource.compsSource === 'RentCast' ? '✓ RentCast' : 'AI'}</span>}</div><div className="space-y-3">{insight.comps.slice(0, 3).map((c, i) => (<div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all group"><p className="text-[11px] font-black text-slate-800 truncate mb-2 uppercase">{c.address}</p><div className="flex justify-between text-[10px] font-black uppercase tracking-tight"><div className="flex gap-3"><span className="text-slate-400">{c.price}</span><span className="text-emerald-600">{c.annualRevenue} REV</span></div><div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{((parseInt(c.annualRevenue.replace(/[^0-9]/g, '')) / (parseInt(c.price.replace(/[^0-9]/g, '')) || 1)) * 100).toFixed(1)}% YIELD</div></div></div>))}</div></div>
               <div className="lg:col-span-2"><PropertyChat insight={insight} config={baseConfig} /></div>
             </div>
 
@@ -1135,10 +1157,58 @@ const App: React.FC = () => {
         )
         }
 
-        {/* OTHER TABS */}
-        {activeTab === 'analytics' && <div className="max-w-[1600px] mx-auto"><Charts data={monthlyData} /></div>}
-        {activeTab === 'monthly' && <div className="max-w-[1600px] mx-auto"><FinancialTables data={monthlyData} title={`${strategy} Monthly Cash Flow`} /></div>}
-        {activeTab === 'yearly' && <div className="max-w-[1600px] mx-auto"><FinancialTables data={yearlyData} title={`${strategy} Yearly Cash Flow`} isYearly /></div>}
+        {/* ANALYTICS TAB (Performance) */}
+        {activeTab === 'analytics' && (
+          <div className="max-w-[1600px] mx-auto">
+            {monthlyData && monthlyData.length > 0 ? (
+              <Charts data={monthlyData} />
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+                <BarChart3 size={48} className="mx-auto mb-4 text-slate-300" />
+                <p className="text-slate-400 font-black text-sm uppercase tracking-widest mb-4">No Performance Data Available</p>
+                <p className="text-slate-500 text-sm mb-6">Run an underwriting analysis to see financial projections and performance charts.</p>
+                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-900">
+                  Go to Audit & Analyze
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        {/* MONTHLY TAB */}
+        {activeTab === 'monthly' && (
+          <div className="max-w-[1600px] mx-auto">
+            {monthlyData && monthlyData.length > 0 ? (
+              <FinancialTables data={monthlyData} title={`${strategy} Monthly Cash Flow`} />
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+                <Calendar size={48} className="mx-auto mb-4 text-slate-300" />
+                <p className="text-slate-400 font-black text-sm uppercase tracking-widest mb-4">No Monthly Data Available</p>
+                <p className="text-slate-500 text-sm mb-6">Run an underwriting analysis to see monthly financial projections.</p>
+                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-900">
+                  Go to Audit & Analyze
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* YEARLY TAB */}
+        {activeTab === 'yearly' && (
+          <div className="max-w-[1600px] mx-auto">
+            {yearlyData && yearlyData.length > 0 ? (
+              <FinancialTables data={yearlyData} title={`${strategy} Yearly Cash Flow`} isYearly />
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+                <TrendingUp size={48} className="mx-auto mb-4 text-slate-300" />
+                <p className="text-slate-400 font-black text-sm uppercase tracking-widest mb-4">No Yearly Data Available</p>
+                <p className="text-slate-500 text-sm mb-6">Run an underwriting analysis to see yearly financial projections.</p>
+                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-900">
+                  Go to Audit & Analyze
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {
           activeTab === 'assumptions' && (
             <div className="space-y-6 pb-20 max-w-[1600px] mx-auto animate-in fade-in duration-500">
@@ -1343,11 +1413,14 @@ const App: React.FC = () => {
                         {!comparisonMode && (
                           <button
                             onClick={() => {
-                              setPropertyInput(assessment.address);
+                              // 🔧 FIX: Load saved analysis instead of re-running
+                              setPropertyInput('');
                               setDisplayedAddress(assessment.address);
                               setStrategy(assessment.strategy);
+                              setBaseConfig(assessment.config);
+                              setSelectedAmenityIds(assessment.selectedAmenities);
+                              setInsight(assessment.insight);
                               setActiveTab('dashboard');
-                              runAnalysis();
                             }}
                             className="w-full px-4 py-2 bg-[#0f172a] hover:bg-black text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
                           >

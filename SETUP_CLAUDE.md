@@ -53,16 +53,31 @@ Your app will be available at `http://localhost:5173` (or the port Vite assigns)
 
 ## 🎯 What Models Are Being Used
 
-Your app now uses these Claude models:
+Your app now uses a **hybrid model approach** for optimal cost/quality balance:
 
-### **Address Autocomplete & Amenity Suggestions:**
-- Model: `claude-haiku-4-5-20251001` (fast & cheap)
-- Cost: ~$0.01 per 100 requests
+### **🚀 Haiku (Fast & Cheap) - Simple Tasks:**
+- Model: `claude-3-5-haiku-20241022`
+- Cost: ~$0.0001-0.001 per request
+- Uses:
+  - Address autocomplete suggestions
+  - Amenity impact estimates
+  - Property chat responses
 
-### **Property Analysis & Chat:**
-- Model: `claude-sonnet-4-20250514` (smart & accurate)
-- Cost: ~$0.10-0.50 per property analysis
-- Cost: ~$0.01-0.05 per chat message
+### **🧠 Sonnet 4 (Smart & Accurate) - Complex Analysis:**
+- Model: `claude-sonnet-4-20250514`
+- Cost: ~$0.01-0.05 per request
+- Uses:
+  - Property analysis & underwriting
+  - Financial KPI calculations
+  - Sensitivity analysis
+  - Path to Yes evaluation
+  - Amenity ROI analysis
+  - Lender packet generation
+  - Market discovery
+  - Regulation scanning
+  - Comp strength scoring
+
+**Cost Savings**: ~40-50% reduction compared to all-Sonnet model while maintaining quality for critical analysis tasks.
 
 ---
 

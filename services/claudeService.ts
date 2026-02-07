@@ -26,11 +26,49 @@ import {
   COMPS_STRENGTH_PROMPT
 } from "../prompts/underwriting";
 
+// ---------------------------------------------------------------------------
+// API key must be set in .env as VITE_ANTHROPIC_API_KEY (get key from console.anthropic.com)
+// ---------------------------------------------------------------------------
+const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
-const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
-  dangerouslyAllowBrowser: true // Required for client-side usage
-});
+function getApiKey(): string {
+  const key = ANTHROPIC_API_KEY?.trim();
+  if (!key || key === "sk-ant-api03-your-key-here" || key === "YOUR_ANTHROPIC_API_KEY_HERE") {
+    throw new Error(
+      "Claude API key is missing or not configured. Add VITE_ANTHROPIC_API_KEY to your .env file (get a key from console.anthropic.com). Restart the dev server after changing .env."
+    );
+  }
+  if (!key.startsWith("sk-ant-")) {
+    throw new Error(
+      "Invalid Claude API key format. Keys should start with sk-ant-. Check VITE_ANTHROPIC_API_KEY in .env and get a valid key from console.anthropic.com."
+    );
+  }
+  return key;
+}
+
+let _anthropic: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_anthropic) {
+    const key = getApiKey();
+    _anthropic = new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true });
+  }
+  return _anthropic;
+}
+
+// ============================================================================
+// MODEL SELECTION - HYBRID APPROACH
+// ============================================================================
+// Sonnet 4: Complex financial analysis requiring strong reasoning
+// Haiku: Fast & cheap for conversational/simple tasks
+type ModelType = 'complex_analysis' | 'simple_task';
+
+function getModel(taskType: ModelType): string {
+  if (taskType === 'complex_analysis') {
+    return 'claude-sonnet-4-20250514'; // Complex underwriting, financial reasoning
+  } else {
+    return 'claude-3-5-haiku-20241022'; // Fast & cheap for chat, suggestions
+  }
+}
 
 // ============================================================================
 // RATE LIMIT HANDLING WITH AUTO-RETRY
@@ -128,8 +166,8 @@ const parseJSON = (text: string): any => {
 export const getAddressSuggestions = async (input: string): Promise<string[]> => {
   if (input.length < 5) return [];
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('simple_task'),
       max_tokens: 1024,
       messages: [{
         role: 'user',
@@ -150,8 +188,8 @@ Return ONLY a JSON array of strings. No other text. Example format: ["123 Main S
 
 export const suggestAmenityImpact = async (amenityName: string, location: string): Promise<Partial<Amenity>> => {
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('simple_task'),
       max_tokens: 1024,
       messages: [{
         role: 'user',
@@ -178,13 +216,99 @@ Example: {"cost": 5000, "adrBoost": 20, "occBoost": 2}`
   }
 };
 
+// Web search for STR market comps when RentCast doesn't have them
+export const searchWebForSTRComps = async (address: string, bedrooms?: number, bathrooms?: number): Promise<any[] | null> => {
+  try {
+    console.log(`[Claude] Searching web for STR market comps: ${address}`);
+
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
+      max_tokens: 2048,
+      tools: [
+        {
+          type: "web_search_20250305",
+          name: "web_search"
+        }
+      ],
+      messages: [{
+        role: 'user',
+        content: `Search the web for short-term rental comparable properties and market data for:
+
+${address}${bedrooms ? `, ${bedrooms} bed` : ''}${bathrooms ? `, ${bathrooms} bath` : ''}
+
+Find 3-5 comparable STR properties in the same city/market with their:
+- Address or location
+- Average Daily Rate (ADR)
+- Occupancy Rate (%)
+- Any other STR performance metrics
+
+Search Airbnb listings, VRBO, AirDNA reports, Mashvisor, local STR market reports, or real estate websites with STR data.
+
+Return ONLY a JSON array with this structure (no other text):
+[
+  {
+    "address": "string",
+    "adr": number (e.g., 150),
+    "occupancy": number (percentage 0-100, e.g., 45),
+    "distance": "nearby in same market"
+  }
+]
+
+If you can find at least 3 comps, return the array. If you cannot find sufficient STR comp data, return: null`
+      }]
+    });
+
+    let resultText = '';
+    for (const block of response.content) {
+      if (block.type === 'text') {
+        resultText = block.text;
+        break;
+      }
+    }
+
+    if (!resultText) {
+      console.log('[Claude] No text content in web search response');
+      return null;
+    }
+
+    const rawText = resultText.trim();
+    console.log('[Claude] Web comp search response:', rawText.substring(0, 200));
+
+    // Handle "null" response
+    if (rawText === 'null' || rawText.toLowerCase() === 'null') {
+      console.log('[Claude] No STR comps found via web search');
+      return null;
+    }
+
+    // Try to extract JSON
+    let jsonText = rawText;
+    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[0];
+    }
+
+    const result = parseJSON(jsonText);
+
+    if (Array.isArray(result) && result.length > 0) {
+      console.log(`[Claude] ✅ Found ${result.length} STR comps via web search`);
+      return result;
+    }
+
+    console.log('[Claude] No valid STR comps in web search response');
+    return null;
+  } catch (e: any) {
+    console.error("❌ Web search for STR comps failed:", e.message || e);
+    return null;
+  }
+};
+
 // Web search for STR data when RentCast doesn't have it
 export const searchWebForSTRData = async (address: string, bedrooms?: number, bathrooms?: number): Promise<{ adr: number; occupancy: number } | null> => {
   try {
     console.log(`[Claude] Searching web for STR data: ${address}`);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 2048,
       // ⭐ CRITICAL FIX: Enable web search tool
       tools: [
@@ -292,8 +416,8 @@ Always reference the data provided if relevant.`;
     });
 
     try {
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+      const response = await getClient().messages.create({
+        model: getModel('simple_task'),
         max_tokens: 4096,
         system: this.systemPrompt,
         messages: this.conversationHistory
@@ -345,17 +469,49 @@ GROUND TRUTH SPECS (USE THESE EXACTLY):
         groundTruth += `\nLONG-TERM RENTAL MARKET GROUND TRUTH:\n- Estimated Monthly LTR Rent: $${rVal}\n`;
         if (re.rentRangeLow) groundTruth += `- Rent Range: $${re.rentRangeLow} - $${re.rentRangeHigh}\n`;
       }
+      
+      // Also extract comparable properties from rent estimate if available
+      if (re.comparableProperties && Array.isArray(re.comparableProperties) && re.comparableProperties.length > 0) {
+        groundTruth += `\nLONG-TERM RENTAL COMPARABLES (FROM RENT ESTIMATE):\n`;
+        re.comparableProperties.slice(0, 3).forEach((comp: any, i: number) => {
+          const addr = comp.formattedAddress || comp.address || 'N/A';
+          const rent = comp.rent || comp.listedPrice || 'N/A';
+          const beds = comp.bedrooms || 'N/A';
+          const baths = comp.bathrooms || 'N/A';
+          groundTruth += `${i + 1}. ${addr} (${beds}bd/${baths}ba): $${rent}/mo\n`;
+        });
+        console.log(`[Claude] ✅ Found ${re.comparableProperties.length} rental comps from Rent Estimate endpoint`);
+      }
     }
 
     if (strData) {
-      groundTruth += `\nSHORT-TERM RENTAL (STR) MARKET GROUND TRUTH:\n- Estimated ADR (Average Daily Rate): $${strData.rent}\n- Estimated Occupancy Rate: ${Math.round(strData.occupancy * 100)}%\n- ADR Range: $${strData.rentRangeLow} - $${strData.rentRangeHigh}\n`;
+      groundTruth += `\nRECENT STR COMPARABLES:\n- Estimated ADR (Average Daily Rate): $${strData.rent}\n- Estimated Occupancy Rate: ${Math.round(strData.occupancy * 100)}%\n- ADR Range: $${strData.rentRangeLow} - $${strData.rentRangeHigh}\n`;
     }
 
     if (strComps && strComps.length > 0) {
       groundTruth += `\nRECENT STR COMPARABLES (FACTUAL PERFORMANCE):\n`;
       strComps.slice(0, 3).forEach((comp: any, i: number) => {
-        groundTruth += `${i + 1}. ${comp.formattedAddress}: ADR $${comp.adr}, Occ ${Math.round(comp.occupancy * 100)}%, Distance ${comp.distance} miles\n`;
+        // Handle different field name variations from RentCast API
+        const address = comp.formattedAddress || comp.address || 'N/A';
+        const adr = comp.adr || comp.rent || comp.price || 'N/A';
+        const occ = comp.occupancy !== undefined ? Math.round(comp.occupancy * 100) : 'N/A';
+        const distance = comp.distance || comp.distanceFromSubject || 'N/A';
+        groundTruth += `${i + 1}. ${address}: ADR $${adr}, Occ ${occ}%, Distance ${distance} miles\n`;
       });
+      console.log('[Claude] ✅ Using RentCast STR comps for occupancy calibration - this will constrain estimates to realistic ranges');
+    } else {
+      console.warn('[Claude] No RentCast STR comps available - searching web for market comparables...');
+      // Try web search for STR comps if RentCast doesn't have them
+      const webComps = await searchWebForSTRComps(factualData?.formattedAddress || query, factualData?.bedrooms, factualData?.bathrooms);
+      if (webComps && webComps.length > 0) {
+        groundTruth += `\nRECENT STR COMPARABLES (WEB SEARCH DATA):\n`;
+        webComps.slice(0, 3).forEach((comp: any, i: number) => {
+          groundTruth += `${i + 1}. ${comp.address}: ADR $${comp.adr}, Occ ${Math.round(comp.occupancy)}%, Market Data\n`;
+        });
+        console.log(`[Claude] ✅ Found ${webComps.length} STR comps via web search - USING for accurate occupancy calibration`);
+      } else {
+        console.warn('[Claude] ⚠️ No RentCast or web comps available - using general market knowledge (less accurate)');
+      }
     }
 
     if (marketStats) {
@@ -365,17 +521,17 @@ GROUND TRUTH SPECS (USE THESE EXACTLY):
       }
     }
 
-    const response = await withRetry(() => anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await withRetry(() => getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       messages: [{
         role: 'user',
         content: `Act as an expert real estate underwriter. Perform a multi-strategy audit for: ${query}. 
 ${groundTruth}
 
-1. MARKET PRICE: cross-examine internal records against current listing trends. If ground truth says a 'Last Sale Price' of $339k but the property looks like a $500k house, prioritize the $500k market value.
-2. STR: Data-driven ADR and Occupancy. If 'SHORT-TERM RENTAL (STR) MARKET GROUND TRUTH' is provided in the ground truth section, prioritize those values over your general knowledge.
-3. MTR: Monthly rent for 30-90 day furnished rentals.
+|1. MARKET PRICE: cross-examine internal records against current listing trends. If ground truth says a 'Last Sale Price' of $339k but the property looks like a $500k house, prioritize the $500k market value.
+|2. STR: Data-driven ADR and Occupancy. If 'RECENT STR COMPARABLES' is provided in the ground truth section, MUST calibrate occupancy to match comp data. If comps show 38% avg occ, estimate within 30-48% range. NEVER exceed comp avg by 10%. Use comps PRIMARY REFERENCE.
+|3. MTR: Monthly rent for 30-90 day furnished rentals.
 4. LTR: Monthly rent for 12-month traditional leases.
 5. OPERATING COSTS: Area-specific Property Tax (calculate as ~1.2% of purchase price if unknown), HOA, and Cleaning Fee estimates.
 6. FURNISHINGS: Calculate a professional mid-range furnishing budget using EXACTLY this breakdown logic based on bedroom/bathroom count:
@@ -466,10 +622,26 @@ Return ONLY a JSON object with this EXACT structure:
       }
     }
 
+    // 🔧 NEW: Add data source tracking
+    const dataSource = {
+      adrSource: (strData && strData.rent) ? (strData.source === 'web_search' ? 'Web Search' : 'RentCast') as const : 'AI Estimate' as const,
+      occupancySource: (strData && strData.occupancy) ? (strData.source === 'web_search' ? 'Web Search' : 'RentCast') as const : 'AI Estimate' as const,
+      compsSource: (strComps && strComps.length > 0) ? 'RentCast' as const : 'AI Generated' as const,
+      hasRentCastData: !!(strData && strData.source !== 'web_search') || !!(strComps)
+    };
+    
+    console.log('[Claude] Data Source Summary:', {
+      adr: dataSource.adrSource,
+      occupancy: dataSource.occupancySource,
+      comps: dataSource.compsSource,
+      hasRentCastData: dataSource.hasRentCastData
+    });
+
     return {
       ...rawData,
       summary: rawData.recommendation,
-      sources: rawData.sources || []
+      sources: rawData.sources || [],
+      dataSource
     };
   } catch (e) {
     console.error("Underwriting failed", e);
@@ -488,8 +660,8 @@ export const runPropertyAudit = async (address: string, knownFacts?: PropertyFac
   try {
     console.log('[Claude] Running property audit for:', address);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       tools: [{ type: "web_search_20250305", name: "web_search" }],
       messages: [{ role: 'user', content: AUDIT_PROMPT(address, knownFacts) }]
@@ -514,8 +686,8 @@ export const runUnderwriteAnalysis = async (input: UnderwriteInput): Promise<Und
   try {
     console.log('[Claude] Running underwrite analysis:', input.strategy);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 8192,
       messages: [{ role: 'user', content: UNDERWRITE_PROMPT(input) }]
     });
@@ -546,8 +718,8 @@ export const runSensitivityAnalysis = async (baseKPIs: {
   try {
     console.log('[Claude] Running sensitivity analysis');
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       messages: [{ role: 'user', content: SENSITIVITY_PROMPT(baseKPIs) }]
     });
@@ -571,8 +743,8 @@ export const runAmenityROI = async (input: AmenityROIInput): Promise<AmenityROIR
   try {
     console.log('[Claude] Running amenity ROI analysis');
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       messages: [{ role: 'user', content: AMENITY_ROI_PROMPT(input) }]
     });
@@ -596,8 +768,8 @@ export const scanRegulations = async (city: string): Promise<RegulationReport> =
   try {
     console.log('[Claude] Scanning regulations for:', city);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       tools: [{ type: "web_search_20250305", name: "web_search" }],
       messages: [{ role: 'user', content: REGULATION_SCANNER_PROMPT(city) }]
@@ -631,8 +803,8 @@ export const generateLenderPacket = async (analysis: {
   try {
     console.log('[Claude] Generating lender packet for:', analysis.address);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       messages: [{ role: 'user', content: PACKET_SUMMARY_PROMPT(analysis) }]
     });
@@ -661,8 +833,8 @@ export const calculatePathToYes = async (current: {
   try {
     console.log('[Claude] Calculating path to yes');
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       messages: [{ role: 'user', content: PATH_TO_YES_PROMPT(current) }]
     });
@@ -686,8 +858,8 @@ export const discoverMarkets = async (input: MarketDiscoveryInput): Promise<Mark
   try {
     console.log('[Claude] Discovering markets for budget:', input.budget);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 4096,
       tools: [{ type: "web_search_20250305", name: "web_search" }],
       messages: [{ role: 'user', content: MARKET_DISCOVERY_PROMPT(input) }]
@@ -715,8 +887,8 @@ export const scoreCompStrength = async (
   try {
     console.log('[Claude] Scoring comp strength');
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getClient().messages.create({
+      model: getModel('complex_analysis'),
       max_tokens: 2048,
       messages: [{ role: 'user', content: COMPS_STRENGTH_PROMPT(comps, subject) }]
     });

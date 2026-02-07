@@ -133,11 +133,14 @@
                                 {!comparisonMode && (
                                     <button
                                         onClick={() => {
-                                            setPropertyInput(assessment.address);
+                                            // 🔧 FIX: Load saved analysis instead of re-running
+                                            setPropertyInput('');
                                             setDisplayedAddress(assessment.address);
                                             setStrategy(assessment.strategy);
+                                            setBaseConfig(assessment.config);
+                                            setSelectedAmenityIds(assessment.selectedAmenities);
+                                            setInsight(assessment.insight);
                                             setActiveTab('dashboard');
-                                            runAnalysis();
                                         }}
                                         className="w-full px-4 py-2 bg-[#0f172a] hover:bg-black text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
                                     >

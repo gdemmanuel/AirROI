@@ -62,6 +62,10 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
     const StatusIcon = config.icon;
     const isPositive = status === 'Strong Buy' || status === 'Buy';
 
+    // Status scale (left to right)
+    const statusScale = ['No-Buy', 'Review', 'Conditional Buy', 'Buy', 'Strong Buy'];
+    const currentStatusIndex = statusScale.indexOf(status);
+
     return (
         <div className="bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-6">
@@ -84,6 +88,37 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
                         Refresh
                     </button>
                 )}
+            </div>
+
+            {/* Visual Status Scale - Continuous Gauge */}
+            <div className="mb-6">
+                {/* Gradient bar background */}
+                <div className="relative h-10 rounded-full bg-gradient-to-r from-rose-500 via-amber-400 via-yellow-400 via-green-400 to-emerald-600 shadow-md overflow-hidden">
+                    {/* Indicator needle/marker */}
+                    <div
+                        className="absolute top-0 bottom-0 w-1 bg-slate-800 transition-all duration-300 flex items-center justify-center"
+                        style={{ left: `${(currentStatusIndex / (statusScale.length - 1)) * 100}%` }}
+                    >
+                        {/* Thumb indicator */}
+                        <div className="absolute -top-3 -bottom-3 -left-2 -right-2 bg-slate-800 rounded-full border-2 border-white shadow-lg" />
+                    </div>
+                </div>
+                
+                {/* Scale labels */}
+                <div className="flex justify-between mt-2 px-1">
+                    <span className="text-[9px] font-bold text-rose-600">No-Buy</span>
+                    <span className="text-[9px] font-bold text-slate-400">Review</span>
+                    <span className="text-[9px] font-bold text-slate-400">Conditional</span>
+                    <span className="text-[9px] font-bold text-slate-400">Buy</span>
+                    <span className="text-[9px] font-bold text-emerald-600">Strong Buy</span>
+                </div>
+                
+                {/* Current status label below */}
+                <div className="text-center mt-2">
+                    <p className={`text-xs font-black uppercase tracking-widest ${config.text}`}>
+                        {status}
+                    </p>
+                </div>
             </div>
 
             {/* Status Banner with statusReason */}

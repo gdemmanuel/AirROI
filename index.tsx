@@ -2,6 +2,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './src/index.css';
+import { ReactQueryProvider } from './src/lib/queryClient';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -11,6 +13,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <ReactQueryProvider>
+      <App />
+    </ReactQueryProvider>
   </React.StrictMode>
 );

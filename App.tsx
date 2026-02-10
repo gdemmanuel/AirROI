@@ -688,8 +688,8 @@ const App: React.FC = () => {
             <li key={i} className="flex gap-4 items-start">
               <div className={`shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${bulletColor}`} />
               <div className="flex flex-col">
-                {hasHeader && <strong className={`${isDark ? 'text-white' : 'text-[#475569]'} font-extrabold text-[15px] tracking-tight mb-1`}>{line.substring(0, splitIndex).trim()}</strong>}
-                <p className={`text-[14px] leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-[#94a3b8]'}`}>{(hasHeader ? line.substring(splitIndex + 1).trim() : line).replace(/\*\*/g, '')}</p>
+                {hasHeader && <strong className={`${isDark ? 'text-white' : 'text-[#1e293b]'} font-extrabold text-[15px] tracking-tight mb-1`}>{line.substring(0, splitIndex).trim()}</strong>}
+                <p className={`text-[14px] leading-relaxed font-medium ${isDark ? 'text-slate-200' : 'text-[#1e293b]'}`}>{(hasHeader ? line.substring(splitIndex + 1).trim() : line).replace(/\*\*/g, '')}</p>
               </div>
             </li>
           );
@@ -880,7 +880,7 @@ const App: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as any)}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all font-black text-[12px] uppercase tracking-wider ${activeTab === item.id ? 'bg-[#1e293b] text-white shadow-xl' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all font-black text-[12px] uppercase tracking-wider ${activeTab === item.id ? 'bg-[#1e293b] text-white shadow-xl' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
             >
               <div className="w-5 flex justify-center shrink-0"><item.icon size={18} /></div>
               <span className="flex-1 text-left">{item.label}</span>
@@ -893,7 +893,7 @@ const App: React.FC = () => {
         <div className="p-3 bg-[#1e293b]/50 rounded-2xl flex flex-col gap-2 mb-6 border border-white/5">
           <p className="text-[10px] font-black uppercase text-slate-500 px-2 py-1 tracking-widest">Strategy</p>
           {[{ id: 'STR', label: 'SHORT', color: 'bg-[#f43f5e]' }, { id: 'MTR', label: 'MID', color: 'bg-blue-500' }, { id: 'LTR', label: 'LONG', color: 'bg-[#10b981]' }].map(s => (
-            <button key={s.id} onClick={() => setStrategy(s.id as RentalStrategy)} className={`w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${strategy === s.id ? `${s.color} text-white shadow-xl` : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}>{s.label}</button>
+            <button key={s.id} onClick={() => setStrategy(s.id as RentalStrategy)} className={`w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${strategy === s.id ? `${s.color} text-white shadow-xl` : 'text-slate-200 hover:text-white hover:bg-white/5'}`}>{s.label}</button>
           ))}
         </div>
       </nav>
@@ -902,7 +902,7 @@ const App: React.FC = () => {
         <div className="max-w-[1600px] mx-auto mb-8 print:hidden relative" ref={suggestionRef}>
           <div className="bg-white p-1 rounded-3xl shadow-xl flex flex-col md:flex-row gap-1 border border-slate-100">
             <div className="relative flex-1">
-              <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+              <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
               <input type="text" placeholder="Enter property address..." className="w-full pl-16 pr-8 py-4 bg-white border-none rounded-2xl outline-none text-[15px] font-black text-slate-800" value={propertyInput} onChange={(e) => setPropertyInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && runAnalysis()} />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 {isUsingWebData ? (
@@ -970,7 +970,7 @@ const App: React.FC = () => {
                   </div>
                   <div className="mb-6">
                     <div className="flex items-center gap-3 mb-3 group"><h2 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-white">{displayedAddress}</h2><a href={`https://www.zillow.com/homes/for_sale/${encodeURIComponent(displayedAddress)}_rb/`} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-[#f43f5e] hover:scale-110 rounded-full transition-all text-white"><Map size={14} /></a></div>
-                    <div className="flex gap-6 text-slate-400 text-[10px] font-black uppercase tracking-[0.25em]">
+                    <div className="flex gap-6 text-slate-600 text-[10px] font-black uppercase tracking-[0.25em]">
                       <span className="flex gap-2 items-center border-r border-white/10 pr-6 last:border-0"><Home size={14} className="text-[#f43f5e]" /> {insight.beds} BEDS</span>
                       <span className="flex gap-2 items-center border-r border-white/10 pr-6 last:border-0"><Layers size={14} className="text-[#3b82f6]" /> {insight.baths} BATHS</span>
                       <span className="flex gap-2 items-center border-r border-white/10 pr-6 last:border-0"><Ruler size={14} className="text-[#10b981]" /> {insight.sqft.toLocaleString()} SQFT</span>
@@ -984,7 +984,7 @@ const App: React.FC = () => {
                   <div className="p-4 bg-white/5 rounded-xl border border-white/5"><div className="flex items-center gap-1.5 mb-1.5"><p className="text-[9px] font-black text-[#f59e0b] uppercase tracking-widest">GROSS YIELD</p><InfoTooltip content="Gross Rental Yield: Annual gross rental income divided by purchase price. Quick comparison metric before expenses." /></div><p className="text-2xl font-black tracking-tighter text-white">{grossYield.toFixed(2)}%</p></div>
                   <div className="p-4 bg-gradient-to-br from-[#f43f5e]/20 to-rose-600/10 rounded-xl border border-[#f43f5e]/30">
                     <p className="text-[9px] font-black text-[#f43f5e] uppercase tracking-widest mb-1.5">ACQUISITION PRICE</p>
-                    <div className="relative"><span className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg">$</span><input type="text" value={new Intl.NumberFormat().format(baseConfig.price)} onChange={(e) => handleInputChange('price', e.target.value)} className="bg-transparent border-none pl-5 py-0 text-2xl font-black text-white w-full outline-none" /></div>
+                    <div className="relative"><span className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-500 font-black text-lg">$</span><input type="text" value={new Intl.NumberFormat().format(baseConfig.price)} onChange={(e) => handleInputChange('price', e.target.value)} className="bg-transparent border-none pl-5 py-0 text-2xl font-black text-white w-full outline-none" /></div>
                   </div>
                 </div>
               </div>
@@ -992,11 +992,11 @@ const App: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="p-5 bg-white rounded-xl border border-slate-100 flex flex-col justify-between min-h-[120px]">
-                <div><h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">CAPITAL STRATEGY</h4><div className="space-y-2"><div className="flex justify-between text-[11px] font-black"><span className="text-slate-400">DOWN PMT</span><span>{formatCurrency(cashPortion)}</span></div><div className="flex justify-between text-[11px] font-black"><span className="text-[#f43f5e]">HELOC</span><span className="text-[#f43f5e]">{formatCurrency(helocPortion)}</span></div></div></div>
+                <div><h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">CAPITAL STRATEGY</h4><div className="space-y-2"><div className="flex justify-between text-[11px] font-black"><span className="text-slate-600">DOWN PMT</span><span className="text-slate-900">{formatCurrency(cashPortion)}</span></div><div className="flex justify-between text-[11px] font-black"><span className="text-[#f43f5e]">HELOC</span><span className="text-[#f43f5e]">{formatCurrency(helocPortion)}</span></div></div></div>
                 <input type="range" min="0" max="100" value={baseConfig.helocFundingPercent} onChange={(e) => handleInputChange('helocFundingPercent', e.target.value)} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#f43f5e] mt-3" />
               </div>
               <div className="p-5 bg-white rounded-xl border border-slate-100 flex flex-col justify-between min-h-[120px]">
-                <div><div className="flex justify-between items-center mb-3"><h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">MGMT MODE</h4><div className="p-1 bg-indigo-500/20 rounded-full text-[#818cf8]"><ShieldPlus size={12} /></div></div><div className="space-y-2"><div className="flex justify-between text-[11px] font-black"><span className="text-slate-400">SELECTION</span><span>{getManagementLabel(baseConfig.mgmtFeePercent).split(' ')[0]}</span></div><div className="flex justify-between text-[11px] font-black"><span className="text-slate-400">EST. COST</span><span className="text-[#818cf8]">{formatCurrency(year1Data?.mgmtFee || 0)}</span></div></div></div>
+                <div><div className="flex justify-between items-center mb-3"><h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">MGMT MODE</h4><div className="p-1 bg-indigo-500/20 rounded-full text-[#818cf8]"><ShieldPlus size={12} /></div></div><div className="space-y-2"><div className="flex justify-between text-[11px] font-black"><span className="text-slate-600">SELECTION</span><span className="text-slate-900">{getManagementLabel(baseConfig.mgmtFeePercent).split(' ')[0]}</span></div><div className="flex justify-between text-[11px] font-black"><span className="text-slate-600">EST. COST</span><span className="text-[#818cf8]">{formatCurrency(year1Data?.mgmtFee || 0)}</span></div></div></div>
                 <input type="range" min="0" max="2" step="1" value={getManagementIndex(baseConfig.mgmtFeePercent)} onChange={handleManagementSliderChange} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#818cf8] mt-3" />
               </div>
               <div className="p-4 bg-white rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center"><div className="flex items-center gap-1 mb-1"><p className="text-[9px] font-black text-[#10b981] uppercase tracking-widest">PROFIT (Y1)</p></div><p className={`text-2xl font-black tracking-tighter leading-none ${annualProfit < 0 ? 'text-[#f43f5e]' : 'text-[#10b981]'}`}>{formatCurrency(annualProfit)}</p></div>
@@ -1028,9 +1028,9 @@ const App: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                 {amenities.filter(a => a.active).map(am => (
                   <div key={am.id} className="relative">
-                    <button onClick={() => toggleAmenity(am.id)} className={`w-full p-3 rounded-lg border transition-all flex flex-col gap-1 text-left ${selectedAmenityIds.includes(am.id) ? 'bg-[#f43f5e] border-[#fb7185] text-white shadow-lg' : 'bg-[#1e293b] border-white/5 text-slate-400'}`}>
+                    <button onClick={() => toggleAmenity(am.id)} className={`w-full p-3 rounded-lg border transition-all flex flex-col gap-1 text-left ${selectedAmenityIds.includes(am.id) ? 'bg-[#f43f5e] border-[#fb7185] text-white shadow-lg' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-slate-600'}`}>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[#f43f5e]">{getAmenityIcon(am.icon)}</span>
+                        <span className={selectedAmenityIds.includes(am.id) ? 'text-white' : 'text-rose-400'}>{getAmenityIcon(am.icon)}</span>
                         <span className="text-[8px] font-black uppercase truncate">{am.name}</span>
                         {am.id === 'furnishings' && (
                           <span
@@ -1041,7 +1041,7 @@ const App: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <div className="flex flex-col"><span className="text-[11px] font-black">${am.cost.toLocaleString()}</span></div>
+                      <div className="flex flex-col"><span className={`text-[11px] font-black ${selectedAmenityIds.includes(am.id) ? 'text-white' : 'text-yellow-300'}`}>${am.cost.toLocaleString()}</span></div>
                     </button>
                   </div>
                 ))}
@@ -1050,13 +1050,13 @@ const App: React.FC = () => {
               {showFurnishingDropdown && (
                 <div className="mt-3 p-4 bg-slate-50 rounded-lg border border-slate-200 animate-in slide-in-from-top-2 duration-200">
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                    <div><label className="text-[9px] font-bold text-slate-500">Beds</label><input type="number" value={furnishingBreakdown.beds} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, beds: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
-                    <div><label className="text-[9px] font-bold text-slate-500">$/Bed</label><input type="number" value={furnishingBreakdown.costPerBed} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, costPerBed: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
-                    <div><label className="text-[9px] font-bold text-slate-500">Baths</label><input type="number" value={furnishingBreakdown.baths} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, baths: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
-                    <div><label className="text-[9px] font-bold text-slate-500">$/Bath</label><input type="number" value={furnishingBreakdown.costPerBath} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, costPerBath: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
-                    <div><label className="text-[9px] font-bold text-slate-500">Living</label><input type="number" value={furnishingBreakdown.livingRoom} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, livingRoom: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
-                    <div><label className="text-[9px] font-bold text-slate-500">Kitchen</label><input type="number" value={furnishingBreakdown.kitchenDining} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, kitchenDining: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
-                    <div><label className="text-[9px] font-bold text-slate-500">Tech/Decor</label><input type="number" value={furnishingBreakdown.techDecor} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, techDecor: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">Beds</label><input type="number" value={furnishingBreakdown.beds} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, beds: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">$/Bed</label><input type="number" value={furnishingBreakdown.costPerBed} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, costPerBed: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">Baths</label><input type="number" value={furnishingBreakdown.baths} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, baths: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">$/Bath</label><input type="number" value={furnishingBreakdown.costPerBath} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, costPerBath: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">Living</label><input type="number" value={furnishingBreakdown.livingRoom} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, livingRoom: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">Kitchen</label><input type="number" value={furnishingBreakdown.kitchenDining} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, kitchenDining: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
+                    <div><label className="text-[9px] font-bold text-slate-600">Tech/Decor</label><input type="number" value={furnishingBreakdown.techDecor} onChange={(e) => setFurnishingBreakdown({ ...furnishingBreakdown, techDecor: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-900" /></div>
                   </div>
                 </div>
               )}
@@ -1070,7 +1070,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] border border-slate-100 flex flex-col"><div className="flex items-center gap-3 mb-8 border-b pb-6"><div className="p-3 bg-rose-50 rounded-xl text-rose-500"><MapPin size={18} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Market Comps</h3>{insight.dataSource?.compsSource && <span className={`ml-auto text-[8px] font-black px-2 py-1 rounded-full ${insight.dataSource.compsSource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{insight.dataSource.compsSource === 'RentCast' ? '✓ RentCast' : 'AI'}</span>}</div><div className="space-y-3">{insight.comps.slice(0, 3).map((c, i) => (<div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all group"><p className="text-[11px] font-black text-slate-800 truncate mb-2 uppercase">{c.address}</p><div className="flex justify-between text-[10px] font-black uppercase tracking-tight"><div className="flex gap-3"><span className="text-slate-400">{c.price}</span><span className="text-emerald-600">{c.annualRevenue} REV</span></div><div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{((parseInt(c.annualRevenue.replace(/[^0-9]/g, '')) / (parseInt(c.price.replace(/[^0-9]/g, '')) || 1)) * 100).toFixed(1)}% YIELD</div></div></div>))}</div></div>
+              <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] border border-slate-100 flex flex-col"><div className="flex items-center gap-3 mb-8 border-b pb-6"><div className="p-3 bg-rose-50 rounded-xl text-rose-500"><MapPin size={18} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Market Comps</h3>{insight.dataSource?.compsSource && <span className={`ml-auto text-[8px] font-black px-2 py-1 rounded-full ${insight.dataSource.compsSource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{insight.dataSource.compsSource === 'RentCast' ? '✓ RentCast' : 'AI'}</span>}</div><div className="space-y-3">{insight.comps.slice(0, 3).map((c, i) => (<div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all group"><p className="text-[11px] font-black text-slate-800 truncate mb-2 uppercase">{c.address}</p><div className="flex justify-between text-[10px] font-black uppercase tracking-tight"><div className="flex gap-3"><span className="text-slate-600">{c.price}</span><span className="text-emerald-600">{c.annualRevenue} REV</span></div><div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{((parseInt(c.annualRevenue.replace(/[^0-9]/g, '')) / (parseInt(c.price.replace(/[^0-9]/g, '')) || 1)) * 100).toFixed(1)}% YIELD</div></div></div>))}</div></div>
               <div className="lg:col-span-2"><PropertyChat insight={insight} config={baseConfig} /></div>
             </div>
 
@@ -1078,12 +1078,12 @@ const App: React.FC = () => {
             <div className="mt-12 pt-8 border-t border-slate-200">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white">
+                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
                     <Sparkles size={20} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-tight">Advanced Analysis</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI-Powered Deep Dive Tools</p>
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900">Advanced Analysis</h2>
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">AI-Powered Deep Dive Tools</p>
                   </div>
                 </div>
               </div>
@@ -1164,8 +1164,8 @@ const App: React.FC = () => {
               <Charts data={monthlyData} />
             ) : (
               <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-                <BarChart3 size={48} className="mx-auto mb-4 text-slate-300" />
-                <p className="text-slate-400 font-black text-sm uppercase tracking-widest mb-4">No Performance Data Available</p>
+                <BarChart3 size={48} className="mx-auto mb-4 text-slate-600" />
+                <p className="text-slate-600 font-black text-sm uppercase tracking-widest mb-4">No Performance Data Available</p>
                 <p className="text-slate-500 text-sm mb-6">Run an underwriting analysis to see financial projections and performance charts.</p>
                 <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-900">
                   Go to Audit & Analyze
@@ -1181,8 +1181,8 @@ const App: React.FC = () => {
               <FinancialTables data={monthlyData} title={`${strategy} Monthly Cash Flow`} />
             ) : (
               <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-                <Calendar size={48} className="mx-auto mb-4 text-slate-300" />
-                <p className="text-slate-400 font-black text-sm uppercase tracking-widest mb-4">No Monthly Data Available</p>
+                <Calendar size={48} className="mx-auto mb-4 text-slate-600" />
+                <p className="text-slate-600 font-black text-sm uppercase tracking-widest mb-4">No Monthly Data Available</p>
                 <p className="text-slate-500 text-sm mb-6">Run an underwriting analysis to see monthly financial projections.</p>
                 <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-900">
                   Go to Audit & Analyze
@@ -1199,8 +1199,8 @@ const App: React.FC = () => {
               <FinancialTables data={yearlyData} title={`${strategy} Yearly Cash Flow`} isYearly />
             ) : (
               <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-                <TrendingUp size={48} className="mx-auto mb-4 text-slate-300" />
-                <p className="text-slate-400 font-black text-sm uppercase tracking-widest mb-4">No Yearly Data Available</p>
+                <TrendingUp size={48} className="mx-auto mb-4 text-slate-600" />
+                <p className="text-slate-600 font-black text-sm uppercase tracking-widest mb-4">No Yearly Data Available</p>
                 <p className="text-slate-500 text-sm mb-6">Run an underwriting analysis to see yearly financial projections.</p>
                 <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-900">
                   Go to Audit & Analyze
@@ -1216,7 +1216,7 @@ const App: React.FC = () => {
                 <h2 className="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tighter flex items-center gap-4"><div className="p-3 bg-rose-50 rounded-xl text-[#f43f5e]"><Settings size={24} /></div> Global Settings</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
                   {[{ label: 'Purchase Price $', field: 'price' }, { label: 'Down Pmt %', field: 'downPaymentPercent' }, { label: 'Mortgage Rate %', field: 'mortgageRate' }, { label: 'HELOC Funding %', field: 'helocFundingPercent' }, { label: 'HELOC Rate %', field: 'helocRate' }, { label: 'Target STR ADR $', field: 'adr' }, { label: 'Target MTR Rent $', field: 'mtrMonthlyRent' }, { label: 'Target LTR Rent $', field: 'ltrMonthlyRent' }, { label: 'STR Occupancy %', field: 'occupancyPercent' }, { label: 'Mgmt Fee %', field: 'mgmtFeePercent' }, { label: 'Maintenance %', field: 'maintenancePercent' }, { label: 'Fixed Opex / Mo $', field: 'fixedOpexMonthly' }, { label: 'Prop. Tax / Mo $', field: 'propertyTaxMonthly' }, { label: 'Prop. Tax Rate %', field: 'annualPropertyTaxRate' }, { label: 'HELOC Allocation %', field: 'helocPaydownPercent' }, { label: 'Ann. Appreciation %', field: 'annualAppreciationRate' }, { label: 'Ann. Rent Growth %', field: 'annualRentGrowthRate' }, { label: 'Ann. Inflation %', field: 'annualExpenseInflationRate' }].map(item => (
-                    <div key={item.field} className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase">{item.label}</label><input type="text" value={item.label.includes('$') ? new Intl.NumberFormat().format((baseConfig as any)[item.field]) : (baseConfig as any)[item.field]} onChange={(e) => handleInputChange(item.field as any, e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-black outline-none" /></div>
+                    <div key={item.field} className="space-y-1.5"><label className="text-[10px] font-black text-slate-600 uppercase">{item.label}</label><input type="text" value={item.label.includes('$') ? new Intl.NumberFormat().format((baseConfig as any)[item.field]) : (baseConfig as any)[item.field]} onChange={(e) => handleInputChange(item.field as any, e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-black text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" /></div>
                   ))}
                 </div>
               </div>
@@ -1237,31 +1237,31 @@ const App: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase">Min Cap Rate %</label>
+                    <label className="text-[10px] font-black text-slate-600 uppercase">Min Cap Rate %</label>
                     <input
                       type="number"
                       value={investmentTargets.minCapRate}
                       onChange={(e) => setInvestmentTargets({ ...investmentTargets, minCapRate: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-black outline-none"
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-black text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase">Min Cash-on-Cash %</label>
+                    <label className="text-[10px] font-black text-slate-600 uppercase">Min Cash-on-Cash %</label>
                     <input
                       type="number"
                       value={investmentTargets.minCoC}
                       onChange={(e) => setInvestmentTargets({ ...investmentTargets, minCoC: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-black outline-none"
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-black text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase">Min DSCR</label>
+                    <label className="text-[10px] font-black text-slate-600 uppercase">Min DSCR</label>
                     <input
                       type="number"
                       step="0.01"
                       value={investmentTargets.minDSCR}
                       onChange={(e) => setInvestmentTargets({ ...investmentTargets, minDSCR: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-black outline-none"
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-black text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
                 </div>
@@ -1297,21 +1297,21 @@ const App: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {amenities.map(am => (
-                    <div key={am.id} className="p-6 border rounded-2xl bg-white">
+                    <div key={am.id} className="p-6 border-2 border-slate-200 rounded-2xl bg-white shadow-lg">
                       <div className="flex justify-between mb-4">
-                        <p className="font-black uppercase">{am.name}</p>
+                        <p className="font-black uppercase text-slate-900">{am.name}</p>
                         {am.id !== 'furnishings' && (
                           <button
                             onClick={() => removeAmenity(am.id)}
-                            className="text-slate-400 hover:text-[#f43f5e] transition-colors"
+                            className="text-slate-600 hover:text-[#f43f5e] transition-colors"
                           >
                             <Trash size={16} />
                           </button>
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1"><label className="text-[10px] font-black text-slate-400">COST ($)</label><input type="number" value={am.cost} onChange={(e) => handleEditAmenity(am.id, { cost: parseFloat(e.target.value) || 0 })} className="w-full bg-slate-50 rounded-xl px-4 py-2" /></div>
-                        <div className="space-y-1"><label className="text-[10px] font-black text-slate-400">ADR BOOST</label><input type="number" value={am.adrBoost} onChange={(e) => handleEditAmenity(am.id, { adrBoost: parseFloat(e.target.value) || 0 })} className="w-full bg-slate-50 rounded-xl px-4 py-2" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-black text-slate-600">COST ($)</label><input type="number" value={am.cost} onChange={(e) => handleEditAmenity(am.id, { cost: parseFloat(e.target.value) || 0 })} className="w-full bg-white border-2 border-slate-300 rounded-xl px-4 py-2 font-black text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-black text-slate-600">ADR BOOST</label><input type="number" value={am.adrBoost} onChange={(e) => handleEditAmenity(am.id, { adrBoost: parseFloat(e.target.value) || 0 })} className="w-full bg-white border-2 border-slate-300 rounded-xl px-4 py-2 font-black text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" /></div>
                       </div>
                     </div>
                   ))}
@@ -1395,7 +1395,7 @@ const App: React.FC = () => {
                             </span>
                           </label>
                           {selectedForComparison.length >= 4 && !selectedForComparison.includes(assessment.id) && (
-                            <span className="text-[8px] font-bold text-slate-400 uppercase">Max 4</span>
+                            <span className="text-[8px] font-bold text-slate-600 uppercase">Max 4</span>
                           )}
                         </div>
                       )}
@@ -1406,7 +1406,7 @@ const App: React.FC = () => {
                             <h3 className="text-sm font-black text-slate-900 mb-1 leading-tight">
                               {assessment.address}
                             </h3>
-                            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-600">
                               <span>{assessment.strategy}</span>
                               <span>•</span>
                               <span>{new Date(assessment.timestamp).toLocaleDateString()}</span>
@@ -1417,7 +1417,7 @@ const App: React.FC = () => {
                               onClick={() => deleteSaved(assessment.id)}
                               className="p-2 hover:bg-rose-50 rounded-lg transition-colors"
                             >
-                              <Trash size={14} className="text-slate-400 hover:text-rose-500" />
+                              <Trash size={14} className="text-slate-500 hover:text-rose-500" />
                             </button>
                           )}
                         </div>
@@ -1490,7 +1490,7 @@ const App: React.FC = () => {
               <div className="bg-[#0f172a] text-white p-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-black tracking-tighter">Property Comparison</h2>
-                  <p className="text-sm text-slate-400 mt-1">Comparing {selectedForComparison.length} properties</p>
+                  <p className="text-sm text-slate-600 mt-1">Comparing {selectedForComparison.length} properties</p>
                 </div>
                 <button
                   onClick={() => setShowComparisonModal(false)}
@@ -1512,7 +1512,7 @@ const App: React.FC = () => {
                           <h3 className="text-sm font-black text-slate-900 mb-2 leading-tight">
                             {assessment.address}
                           </h3>
-                          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-600">
                             <span>{assessment.strategy}</span>
                             <span>•</span>
                             <span>{new Date(assessment.timestamp).toLocaleDateString()}</span>

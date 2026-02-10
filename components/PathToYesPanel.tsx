@@ -32,25 +32,26 @@ const statusConfig: Record<string, { bg: string; border: string; text: string; i
 const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefresh, onApplyRecommendation, liveKpis, targets }) => {
     if (isLoading) {
         return (
-            <div className="bg-white rounded-2xl border border-slate-100 p-8 flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full" />
-                <span className="ml-3 text-slate-500 font-black text-sm uppercase tracking-widest">Calculating Path to Yes...</span>
+            <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 flex flex-col items-center justify-center shadow-lg">
+                <div className="animate-spin w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full mb-4" />
+                <span className="text-slate-700 font-black text-sm uppercase tracking-widest">Calculating Path to Yes...</span>
+                <span className="text-slate-500 text-xs mt-2">This may take 10-15 seconds</span>
             </div>
         );
     }
 
     if (!data) {
         return (
-            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
-                <p className="text-slate-400 font-black text-sm uppercase tracking-widest">
+            <div className="bg-white rounded-2xl border-2 border-slate-200 p-8 text-center shadow-lg">
+                <p className="text-slate-600 font-black text-sm uppercase tracking-widest mb-4">
                     Get actionable recommendations to make this deal work
                 </p>
                 {onRefresh && (
                     <button
                         onClick={onRefresh}
-                        className="mt-4 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-black text-xs uppercase tracking-widest"
+                        className="mt-4 px-8 py-3 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:shadow-xl transform hover:scale-105 transition-all cursor-pointer"
                     >
-                        Calculate Path to Yes
+                        🚀 Calculate Path to Yes
                     </button>
                 )}
             </div>
@@ -107,9 +108,9 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
                 {/* Scale labels */}
                 <div className="flex justify-between mt-2 px-1">
                     <span className="text-[9px] font-bold text-rose-600">No-Buy</span>
-                    <span className="text-[9px] font-bold text-slate-400">Review</span>
-                    <span className="text-[9px] font-bold text-slate-400">Conditional</span>
-                    <span className="text-[9px] font-bold text-slate-400">Buy</span>
+                    <span className="text-[9px] font-bold text-slate-600">Review</span>
+                    <span className="text-[9px] font-bold text-slate-600">Conditional</span>
+                    <span className="text-[9px] font-bold text-slate-600">Buy</span>
                     <span className="text-[9px] font-bold text-emerald-600">Strong Buy</span>
                 </div>
                 
@@ -146,28 +147,28 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
             {/* Target Gaps - Using LIVE KPIs */}
             {!isPositive && liveKpis && targets && (
                 <div className="mb-6">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">
                         Target Gaps
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {/* Cap Rate */}
                         <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-200">
                             <div className="flex items-center gap-1.5 mb-2">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
                                     CAP RATE
                                 </p>
                                 <InfoTooltip content="Capitalization Rate: Annual NOI divided by purchase price. Measures return independent of financing. Higher = better." />
                             </div>
                             <div className="flex items-baseline justify-between mb-1">
                                 <div>
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Current</p>
+                                    <p className="text-[8px] font-bold text-slate-600 uppercase">Current</p>
                                     <span className={`text-xl font-black ${liveKpis.capRate >= targets.minCapRate ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {liveKpis.capRate.toFixed(2)}%
                                     </span>
                                 </div>
-                                <ArrowRight size={16} className="text-slate-300 mx-2" />
+                                <ArrowRight size={16} className="text-slate-600 mx-2" />
                                 <div className="text-right">
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Target</p>
+                                    <p className="text-[8px] font-bold text-slate-600 uppercase">Target</p>
                                     <span className="text-xl font-black text-slate-600">{targets.minCapRate.toFixed(2)}%</span>
                                 </div>
                             </div>
@@ -180,21 +181,21 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
                         {/* Cash-on-Cash */}
                         <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-200">
                             <div className="flex items-center gap-1.5 mb-2">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
                                     CASH-ON-CASH
                                 </p>
                                 <InfoTooltip content="Cash-on-Cash Return: Annual cash flow divided by total cash invested (down payment + closing costs). Measures return on YOUR money." />
                             </div>
                             <div className="flex items-baseline justify-between mb-1">
                                 <div>
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Current</p>
+                                    <p className="text-[8px] font-bold text-slate-600 uppercase">Current</p>
                                     <span className={`text-xl font-black ${liveKpis.cashOnCash >= targets.minCoC ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {liveKpis.cashOnCash.toFixed(2)}%
                                     </span>
                                 </div>
-                                <ArrowRight size={16} className="text-slate-300 mx-2" />
+                                <ArrowRight size={16} className="text-slate-600 mx-2" />
                                 <div className="text-right">
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Target</p>
+                                    <p className="text-[8px] font-bold text-slate-600 uppercase">Target</p>
                                     <span className="text-xl font-black text-slate-600">{targets.minCoC.toFixed(2)}%</span>
                                 </div>
                             </div>
@@ -207,21 +208,21 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
                         {/* DSCR */}
                         <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-200">
                             <div className="flex items-center gap-1.5 mb-2">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
                                     DSCR
                                 </p>
                                 <InfoTooltip content="Debt Service Coverage Ratio: NOI divided by total debt payments. Lenders require 1.25+. Higher = safer margin for loan payments." />
                             </div>
                             <div className="flex items-baseline justify-between mb-1">
                                 <div>
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Current</p>
+                                    <p className="text-[8px] font-bold text-slate-600 uppercase">Current</p>
                                     <span className={`text-xl font-black ${liveKpis.dscr >= targets.minDSCR ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {liveKpis.dscr.toFixed(2)}
                                     </span>
                                 </div>
-                                <ArrowRight size={16} className="text-slate-300 mx-2" />
+                                <ArrowRight size={16} className="text-slate-600 mx-2" />
                                 <div className="text-right">
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Target</p>
+                                    <p className="text-[8px] font-bold text-slate-600 uppercase">Target</p>
                                     <span className="text-xl font-black text-slate-600">{targets.minDSCR.toFixed(2)}</span>
                                 </div>
                             </div>
@@ -238,7 +239,7 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
             {/* Recommendations */}
             {data.recommendations.length > 0 && (
                 <div className="mb-6">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">
                         <Zap size={12} className="inline mr-1" />
                         Recommended Actions
                     </p>
@@ -258,7 +259,7 @@ const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefr
                                             <p className="text-[11px] font-bold text-emerald-600 mb-1">
                                                 Impact: {rec.quantifiedImpact}
                                             </p>
-                                            <p className="text-[10px] font-medium text-slate-400">
+                                            <p className="text-[10px] font-medium text-slate-600">
                                                 {rec.implementationNotes}
                                             </p>
                                         </div>

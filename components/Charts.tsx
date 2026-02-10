@@ -23,8 +23,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="space-y-3">
           {payload.map((entry: any, index: number) => (
             <div key={`item-${index}`} className="flex justify-between items-center gap-12">
-              <span className="flex items-center gap-2.5 font-bold uppercase tracking-widest text-slate-300">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }}></span>
+              <span className="flex items-center gap-2.5 font-bold uppercase tracking-widest text-slate-200">
+                <span 
+                  className="w-2.5 h-2.5 rounded-full" 
+                  style={{ backgroundColor: entry.color }}
+                />
                 {entry.name}
               </span>
               <span className="font-mono font-black text-white">{typeof entry.value === 'number' ? (entry.name.includes('%') ? `${entry.value.toFixed(2)}%` : formatCurrency(entry.value)) : entry.value}</span>
@@ -78,7 +81,7 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
         <button
           key={t}
           onClick={() => onChange(t as any)}
-          className={`px-5 py-2 text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap ${current === t ? 'bg-white text-slate-900 shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`px-5 py-2 text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap ${current === t ? 'bg-white text-slate-900 shadow-md scale-105' : 'text-slate-600 hover:text-slate-600'}`}
         >
           {t / 12}Y
         </button>
@@ -116,7 +119,7 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
           <div className="flex items-center gap-5">
             <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600"><Activity size={24} /></div>
             <div>
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Monthly Performance</h3>
+              <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1">Monthly Performance</h3>
               <p className="text-3xl font-black text-slate-800 tracking-tighter">Cash Flow Analysis</p>
             </div>
           </div>
@@ -138,18 +141,18 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
         </div>
         <div className={`mt-8 pt-8 border-t border-slate-50 grid ${hasHeloc ? 'grid-cols-4' : 'grid-cols-3'} gap-6`}>
           <div>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Avg Monthly CF</p>
+            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Avg Monthly CF</p>
             <p className={`text-2xl font-black tracking-tighter ${avgMonthlyCashFlow >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {formatCurrency(avgMonthlyCashFlow)}
             </p>
           </div>
           <div>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Profit (Y{timeframe / 12})</p>
+            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Total Profit (Y{timeframe / 12})</p>
             <p className="text-2xl font-black text-indigo-600 tracking-tighter">{formatCurrency(lastMonth?.cumulativeNetCash || 0)}</p>
           </div>
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Break-Even</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Break-Even</p>
               <InfoTooltip content="The month when cumulative cash flow turns positive. 'Immediate' means you're profitable from month 1." />
             </div>
             <p className="text-2xl font-black text-slate-800 tracking-tighter">
@@ -209,7 +212,7 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
           <div className="flex items-center gap-5 mb-12">
             <div className="p-4 bg-blue-50 rounded-2xl text-blue-600"><Rocket size={24} /></div>
             <div>
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Wealth Accumulation</h3>
+              <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1">Wealth Accumulation</h3>
               <p className="text-2xl font-black text-slate-800 tracking-tighter">Equity Buildup</p>
             </div>
           </div>
@@ -235,11 +238,11 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
           <div className="mt-8 pt-8 border-t border-slate-50">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Net Equity (Y{timeframe / 12})</p>
+                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Net Equity (Y{timeframe / 12})</p>
                 <p className="text-3xl font-black text-blue-600 tracking-tighter">{formatCurrency(totalEquity)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Property Value</p>
+                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Property Value</p>
                 <p className="text-xl font-black text-slate-600 tracking-tighter">{formatCurrency(lastMonth?.propertyValue || 0)}</p>
               </div>
             </div>

@@ -235,8 +235,9 @@ export const fetchSTRData = async (address: string, propertyType?: string, bedro
 }
 
 export const fetchSTRComps = async (address: string, propertyType?: string, bedrooms?: number, bathrooms?: number): Promise<any | null> => {
-    // UPDATED: RentCast rental comps come from the Rent Estimate endpoint's comparable properties
-    // We'll fetch them via a dedicated rental listings endpoint for long-term rentals
+    // UPDATED: Fetch RentCast SALES comparables (actual sold properties)
+    // These are more valuable for STR analysis than LTR rentals
+    // RentCast does NOT have STR/Airbnb comp data, so sales comps are the best alternative
     if (!RENTCAST_API_KEY) return null;
 
     try {
@@ -247,40 +248,58 @@ export const fetchSTRComps = async (address: string, propertyType?: string, bedr
         }
 
         const encodedAddress = encodeURIComponent(address);
-        let url = `https://api.rentcast.io/v1/listings/rental/long-term?address=${encodedAddress}&radius=5&limit=5`;
+        // Use the Comparables API to get sold properties in the area
+        let url = `https://api.rentcast.io/v1/comps/sale?address=${encodedAddress}&radius=1&limit=5`;
         if (propertyType) url += `&propertyType=${encodeURIComponent(propertyType)}`;
         if (bedrooms) url += `&bedrooms=${bedrooms}`;
 
-        console.log(`[RentCast] Fetching LTR comps from: ${url}`);
+        console.log(`[RentCast] Fetching SALES comps from: ${url}`);
 
         const response = await fetch(url, {
             headers: { 'X-Api-Key': RENTCAST_API_KEY, 'Accept': 'application/json' }
         });
 
         if (!response.ok) {
-            console.error(`RentCast LTR Comps Error: ${response.status}`);
+            console.error(`RentCast Sales Comps Error: ${response.status}`);
             return null;
         }
 
         const data = await response.json();
-        console.log(`[RentCast] LTR Comps Response:`, data);
+        console.log(`[RentCast] Sales Comps Response:`, data);
         
         if (data && Array.isArray(data) && data.length > 0) {
-            console.log(`[RentCast] ✅ Found ${data.length} long-term rental comps`);
+            console.log(`[RentCast] ✅ Found ${data.length} sales comparables`);
             data.forEach((comp: any, i: number) => {
                 const addr = comp.formattedAddress || comp.address || 'N/A';
-                const rent = comp.rent || comp.listedPrice || 'N/A';
-                console.log(`  ${i + 1}. ${addr}: Rent $${rent}/mo`);
+                const price = comp.price || comp.salePrice || 'N/A';
+                const saleDate = comp.saleDate || 'N/A';
+                console.log(`  ${i + 1}. ${addr}: Sale Price $${price} (${saleDate})`);
             });
+            // Transform the data to match expected format for STR analysis
+            const transformedData = data.map((comp: any) => ({
+                formattedAddress: comp.formattedAddress || comp.address,
+                address: comp.formattedAddress || comp.address,
+                price: comp.price || comp.salePrice,
+                salePrice: comp.price || comp.salePrice,
+                saleDate: comp.saleDate,
+                bedrooms: comp.bedrooms,
+                bathrooms: comp.bathrooms,
+                squareFootage: comp.squareFootage,
+                distance: comp.distance || 0,
+                annualRevenue: comp.estimatedAnnualRevenue || 'N/A' // RentCast may estimate this
+            }));
+            // 🔧 Cache the result
+            cacheService.set('fetchSTRComps', { address, propertyType, bedrooms, bathrooms }, transformedData);
+            return transformedData;
         } else {
-            console.warn(`[RentCast] No LTR comps returned (empty array or null)`);
+            console.warn(`[RentCast] No sales comps returned (empty array or null)`);
         }
         
-        // 🔧 Cache the result
-        cacheService.set('fetchSTRComps', { address, propertyType, bedrooms, bathrooms }, data);
-        return data;
+        // 🔧 Cache the empty result
+        cacheService.set('fetchSTRComps', { address, propertyType, bedrooms, bathrooms }, null);
+        return null;
     } catch (error) {
-        console.error("Failed to fetch LTR comps from RentCast", error);
+        console.error("Failed to fetch sales comps from RentCast", error);
         return null;
     }
 }

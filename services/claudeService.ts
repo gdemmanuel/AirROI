@@ -34,6 +34,15 @@ const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
 function getApiKey(): string {
   const key = ANTHROPIC_API_KEY?.trim();
+  
+  // Debug logging
+  console.log('[Claude Service] API Key Status:', {
+    hasKey: !!key,
+    keyLength: key?.length || 0,
+    keyPrefix: key?.substring(0, 10) || 'MISSING',
+    fullKey: key // Log full key for debugging
+  });
+  
   if (!key || key === "sk-ant-api03-your-key-here" || key === "YOUR_ANTHROPIC_API_KEY_HERE") {
     throw new Error(
       "Claude API key is missing or not configured. Add VITE_ANTHROPIC_API_KEY to your .env file (get a key from console.anthropic.com). Restart the dev server after changing .env."
@@ -41,7 +50,7 @@ function getApiKey(): string {
   }
   if (!key.startsWith("sk-ant-")) {
     throw new Error(
-      "Invalid Claude API key format. Keys should start with sk-ant-. Check VITE_ANTHROPIC_API_KEY in .env and get a valid key from console.anthropic.com."
+      `Invalid Claude API key format. Keys should start with sk-ant-, but got: ${key.substring(0, 20)}... Check VITE_ANTHROPIC_API_KEY in .env and get a valid key from console.anthropic.com.`
     );
   }
   return key;
@@ -97,7 +106,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const withRetry = async <T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 60
+  baseDelay: number = 90
 ): Promise<T> => {
   let lastError: any;
 
@@ -510,18 +519,21 @@ GROUND TRUTH SPECS (USE THESE EXACTLY):
     }
 
     if (strComps && strComps.length > 0) {
-      groundTruth += `\nRECENT STR COMPARABLES (FACTUAL PERFORMANCE):\n`;
+      groundTruth += `\nSALES COMPARABLES (MARKET VALUATION):\n`;
       strComps.slice(0, 3).forEach((comp: any, i: number) => {
         // Handle different field name variations from RentCast API
         const address = comp.formattedAddress || comp.address || 'N/A';
-        const adr = comp.adr || comp.rent || comp.price || 'N/A';
-        const occ = comp.occupancy !== undefined ? Math.round(comp.occupancy * 100) : 'N/A';
-        const distance = comp.distance || comp.distanceFromSubject || 'N/A';
-        groundTruth += `${i + 1}. ${address}: ADR $${adr}, Occ ${occ}%, Distance ${distance} miles\n`;
+        const price = comp.price || comp.salePrice || 'N/A';
+        const beds = comp.bedrooms || 'N/A';
+        const baths = comp.bathrooms || 'N/A';
+        const sqft = comp.squareFootage || 'N/A';
+        groundTruth += `${i + 1}. ${address} (${beds}bd/${baths}ba, ${sqft}sqft): Sale Price $${price}\n`;
       });
-      console.log('[Claude] ✅ Using RentCast STR comps for occupancy calibration - this will constrain estimates to realistic ranges');
+      console.log('[Claude] ✅ Using RentCast sales comps for market valuation - this will calibrate pricing estimates');
     } else {
       console.warn('[Claude] No RentCast STR comps available - searching web for market comparables...');
+      // Add delay before web search to avoid rate limiting
+      await sleep(2000);
       // Try web search for STR comps if RentCast doesn't have them
       const webComps = await searchWebForSTRComps(factualData?.formattedAddress || query, factualData?.bedrooms, factualData?.bathrooms);
       if (webComps && webComps.length > 0) {
@@ -541,6 +553,9 @@ GROUND TRUTH SPECS (USE THESE EXACTLY):
         groundTruth += `\nLOCAL MARKET STATISTICS (ZIP ${factualData?.zipCode || 'N/A'}):\n- Avg Rent: $${rm.averageRent || 'N/A'}\n- Rent Range: $${rm.minRent || 'N/A'} - $${rm.maxRent || 'N/A'}\n- Total Listings: ${rm.totalListings || 'N/A'}\n`;
       }
     }
+
+    // Add delay before making API call to avoid rate limiting
+    await sleep(1500);
 
     const response = await withRetry(() => getClient().messages.create({
       model: getModel('complex_analysis'),

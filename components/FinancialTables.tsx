@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MonthlyProjection } from '../types';
 import InfoTooltip from './InfoTooltip';
 
@@ -32,6 +32,20 @@ const FinancialTables: React.FC<TableProps> = ({ data, title, isYearly = false }
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
+  // Track active listeners for cleanup on unmount
+  const listenersRef = useRef<{ move: (e: MouseEvent) => void; up: () => void } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      // Clean up any lingering listeners if component unmounts mid-drag
+      if (listenersRef.current) {
+        document.removeEventListener('mousemove', listenersRef.current.move);
+        document.removeEventListener('mouseup', listenersRef.current.up);
+        listenersRef.current = null;
+      }
+    };
+  }, []);
+
   const startResize = (col: string, e: React.MouseEvent) => {
     const startX = e.clientX;
     const startWidth = widths[col];
@@ -42,7 +56,9 @@ const FinancialTables: React.FC<TableProps> = ({ data, title, isYearly = false }
     const onMouseUp = () => {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
+      listenersRef.current = null;
     };
+    listenersRef.current = { move: onMouseMove, up: onMouseUp };
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   };

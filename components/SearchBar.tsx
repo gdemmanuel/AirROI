@@ -30,9 +30,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 <span className="text-[10px] font-black uppercase tracking-tight">Web Search Data</span>
               </div>
             )}
-            {import.meta.env.VITE_RENTCAST_API_KEY && !isUsingWebData && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 animate-pulse"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-black uppercase tracking-tight">RentCast Live</span></div>
-            )}
           </div>
         </div>
         <button onClick={onSearch} disabled={isAnalyzing || isFetchingFactual || !propertyInput} className="px-10 py-4 bg-[#0f172a] text-white font-black rounded-2xl hover:bg-black transition-all flex items-center gap-3 uppercase tracking-tighter shadow-xl">

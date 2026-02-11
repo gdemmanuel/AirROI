@@ -8,13 +8,8 @@ import {
 } from '../../services/rentcastService';
 import { 
   analyzeProperty, 
-  searchWebForSTRData,
-  runSensitivityAnalysis,
-  runAmenityROI,
-  calculatePathToYes,
-  generateLenderPacket
+  searchWebForSTRData
 } from '../../services/claudeService';
-import { Amenity, PropertyConfig } from '../../types';
 
 /**
  * Hook to fetch property data from RentCast
@@ -117,87 +112,6 @@ export const usePropertyAnalysis = (
       if (error?.status === 429) return false;
       return failureCount < 1;
     },
-    refetchOnMount: false, // Use cache on repeat searches
-  });
-};
-
-/**
- * Hook to run sensitivity analysis
- */
-export const useSensitivityAnalysis = (
-  address: string,
-  config: PropertyConfig,
-  amenities: Amenity[],
-  selectedAmenityIds: string[],
-  enabled: boolean = false // Default to false, must be explicitly enabled
-) => {
-  return useQuery({
-    queryKey: ['sensitivityAnalysis', address, config, amenities, selectedAmenityIds],
-    queryFn: () => runSensitivityAnalysis(address, config, amenities, selectedAmenityIds),
-    enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1,
-    refetchOnMount: false, // Use cache on repeat searches
-  });
-};
-
-/**
- * Hook to run amenity ROI analysis
- */
-export const useAmenityROI = (
-  address: string,
-  config: PropertyConfig,
-  amenities: Amenity[],
-  selectedAmenityIds: string[],
-  enabled: boolean = false
-) => {
-  return useQuery({
-    queryKey: ['amenityROI', address, config, amenities, selectedAmenityIds],
-    queryFn: () => runAmenityROI(address, config, amenities, selectedAmenityIds),
-    enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1,
-    refetchOnMount: false, // Use cache on repeat searches
-  });
-};
-
-/**
- * Hook to calculate path to yes
- */
-export const usePathToYes = (
-  address: string,
-  config: PropertyConfig,
-  amenities: Amenity[],
-  selectedAmenityIds: string[],
-  investmentTargets: { minCapRate: number; minCoC: number; minDSCR: number },
-  enabled: boolean = false
-) => {
-  return useQuery({
-    queryKey: ['pathToYes', address, config, amenities, selectedAmenityIds, investmentTargets],
-    queryFn: () => calculatePathToYes(address, config, amenities, selectedAmenityIds, investmentTargets),
-    enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1,
-    refetchOnMount: false, // Use cache on repeat searches
-  });
-};
-
-/**
- * Hook to generate lender packet
- */
-export const useLenderPacket = (
-  address: string,
-  config: PropertyConfig,
-  amenities: Amenity[],
-  selectedAmenityIds: string[],
-  enabled: boolean = false
-) => {
-  return useQuery({
-    queryKey: ['lenderPacket', address, config, amenities, selectedAmenityIds],
-    queryFn: () => generateLenderPacket(address, config, amenities, selectedAmenityIds),
-    enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1,
     refetchOnMount: false, // Use cache on repeat searches
   });
 };

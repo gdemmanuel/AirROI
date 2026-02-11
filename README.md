@@ -4,31 +4,19 @@
 
 ---
 
-## ⚠️ **CURRENT ISSUE - API KEY NOT WORKING**
+## Setup
 
-**Status**: API key is **invalid** (401 Authentication Error)
+### Configure API Keys
 
-### ✅ **Fix This Now** (5 minutes)
-
-1. **Get a new Claude API key:**
-   - Go: https://console.anthropic.com/account/keys
-   - Create a new key (copy the full value starting with `sk-ant-`)
-
-2. **Update .env file:**
+1. Copy `.env.example` to `.env`
+2. Add your API keys:
    ```
-   VITE_ANTHROPIC_API_KEY=sk-ant-XXXXXXXXXXXXX
-   VITE_RENTCAST_API_KEY=eba8460a381f4241bac61f8830a2219f
-   VITE_GOOGLE_MAPS_API_KEY=your-key-here
+   ANTHROPIC_API_KEY=sk-ant-your-key-here
+   RENTCAST_API_KEY=your-rentcast-key-here
    ```
-
-3. **Restart dev server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Refresh browser:** Ctrl+Shift+R
-
-5. **Test:** Analyze a property at http://localhost:3000
+3. Get keys from:
+   - **Anthropic**: https://console.anthropic.com/account/keys
+   - **RentCast**: https://www.rentcast.io
 
 ---
 
@@ -102,13 +90,15 @@ npm install
 
 ### Start Dev Server
 ```bash
-npm run dev
-# Ready at http://localhost:3000
+npm run dev:full   # Starts Express API server + Vite frontend
+# API server: http://localhost:3002
+# Frontend:   http://localhost:3000
 ```
 
 ### Build for Production
 ```bash
-npm run build
+npm run build      # Build frontend to dist/
+npm run server     # Serve API + static files
 ```
 
 ---

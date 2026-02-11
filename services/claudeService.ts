@@ -89,7 +89,7 @@ const withRetry = async <T>(
           ? parseInt(error.retryAfter)
           : baseDelay;
 
-        console.log(`[Rate Limit] Retrying in ${waitSeconds}s (attempt ${attempt + 1}/${maxRetries})`);
+        if (import.meta.env.DEV) console.log(`[Rate Limit] Retrying in ${waitSeconds}s (attempt ${attempt + 1}/${maxRetries})`);
 
         // Countdown timer
         for (let i = waitSeconds; i > 0; i--) {
@@ -224,7 +224,7 @@ Example: {"cost": 5000, "adrBoost": 20, "occBoost": 2}`
 // Web search for STR market comps when RentCast doesn't have them
 export const searchWebForSTRComps = async (address: string, bedrooms?: number, bathrooms?: number): Promise<any[] | null> => {
   try {
-    console.log(`[Claude] Searching web for STR market comps: ${address}`);
+    if (import.meta.env.DEV) console.log(`[Claude] Searching web for STR market comps: ${address}`);
 
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
@@ -260,10 +260,10 @@ If you can find at least 3 comps, return the array. If you cannot find sufficien
 
     const resultText = extractText(content);
     const rawText = resultText.trim();
-    console.log('[Claude] Web comp search response:', rawText.substring(0, 200));
+    if (import.meta.env.DEV) console.log('[Claude] Web comp search response:', rawText.substring(0, 200));
 
     if (rawText === 'null' || rawText.toLowerCase() === 'null') {
-      console.log('[Claude] No STR comps found via web search');
+      if (import.meta.env.DEV) console.log('[Claude] No STR comps found via web search');
       return null;
     }
 
@@ -276,11 +276,11 @@ If you can find at least 3 comps, return the array. If you cannot find sufficien
     const result = parseJSON(jsonText);
 
     if (Array.isArray(result) && result.length > 0) {
-      console.log(`[Claude] ✅ Found ${result.length} STR comps via web search`);
+      if (import.meta.env.DEV) console.log(`[Claude] ✅ Found ${result.length} STR comps via web search`);
       return result;
     }
 
-    console.log('[Claude] No valid STR comps in web search response');
+    if (import.meta.env.DEV) console.log('[Claude] No valid STR comps in web search response');
     return null;
   } catch (e: any) {
     console.error("❌ Web search for STR comps failed:", e.message || e);
@@ -291,7 +291,7 @@ If you can find at least 3 comps, return the array. If you cannot find sufficien
 // Web search for STR data when RentCast doesn't have it
 export const searchWebForSTRData = async (address: string, bedrooms?: number, bathrooms?: number): Promise<{ adr: number; occupancy: number } | null> => {
   try {
-    console.log(`[Claude] Searching web for STR data: ${address}`);
+    if (import.meta.env.DEV) console.log(`[Claude] Searching web for STR data: ${address}`);
 
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
@@ -312,7 +312,7 @@ Default if no data: {"adr": 120, "occupancy": 50}`
 
     const resultText = extractText(content);
     const rawText = resultText.trim();
-    console.log('[Claude] Raw response:', rawText.substring(0, 200));
+    if (import.meta.env.DEV) console.log('[Claude] Raw response:', rawText.substring(0, 200));
 
     // Extract JSON from the response - try multiple patterns
     let jsonText = rawText;
@@ -333,12 +333,12 @@ Default if no data: {"adr": 120, "occupancy": 50}`
 
     if (result && typeof result.adr === 'number' && typeof result.occupancy === 'number') {
       if (result.adr > 0 && result.occupancy > 0 && result.occupancy <= 100) {
-        console.log(`[Claude] ✅ Found STR data - ADR: $${result.adr}, Occ: ${result.occupancy}%`);
+        if (import.meta.env.DEV) console.log(`[Claude] ✅ Found STR data - ADR: $${result.adr}, Occ: ${result.occupancy}%`);
         return { adr: result.adr, occupancy: result.occupancy };
       }
     }
 
-    console.log('[Claude] ⚠️ Could not parse STR data, using defaults');
+    if (import.meta.env.DEV) console.log('[Claude] ⚠️ Could not parse STR data, using defaults');
     return null;
   } catch (e: any) {
     console.error("❌ Web search for STR data failed:", e.message || e);
@@ -584,7 +584,7 @@ Return ONLY a JSON object with this EXACT structure:
 
 export const runPropertyAudit = async (address: string, knownFacts?: PropertyFacts): Promise<PropertyAudit> => {
   try {
-    console.log('[Claude] Running property audit for:', address);
+    if (import.meta.env.DEV) console.log('[Claude] Running property audit for:', address);
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -600,7 +600,7 @@ export const runPropertyAudit = async (address: string, knownFacts?: PropertyFac
 
 export const runUnderwriteAnalysis = async (input: UnderwriteInput): Promise<UnderwriteResult> => {
   try {
-    console.log('[Claude] Running underwrite analysis:', input.strategy);
+    if (import.meta.env.DEV) console.log('[Claude] Running underwrite analysis:', input.strategy);
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 8192,
@@ -622,7 +622,7 @@ export const runSensitivityAnalysis = async (baseKPIs: {
   dscr: number;
 }): Promise<SensitivityMatrix> => {
   try {
-    console.log('[Claude] Running sensitivity analysis');
+    if (import.meta.env.DEV) console.log('[Claude] Running sensitivity analysis');
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -637,7 +637,7 @@ export const runSensitivityAnalysis = async (baseKPIs: {
 
 export const runAmenityROI = async (input: AmenityROIInput): Promise<AmenityROIResult> => {
   try {
-    console.log('[Claude] Running amenity ROI analysis');
+    if (import.meta.env.DEV) console.log('[Claude] Running amenity ROI analysis');
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -652,7 +652,7 @@ export const runAmenityROI = async (input: AmenityROIInput): Promise<AmenityROIR
 
 export const scanRegulations = async (city: string): Promise<RegulationReport> => {
   try {
-    console.log('[Claude] Scanning regulations for:', city);
+    if (import.meta.env.DEV) console.log('[Claude] Scanning regulations for:', city);
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -677,7 +677,7 @@ export const generateLenderPacket = async (analysis: {
   sources: { title: string; url: string }[];
 }): Promise<LenderPacket> => {
   try {
-    console.log('[Claude] Generating lender packet for:', analysis.address);
+    if (import.meta.env.DEV) console.log('[Claude] Generating lender packet for:', analysis.address);
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -697,7 +697,7 @@ export const calculatePathToYes = async (current: {
   cashInvested?: number;
 }): Promise<PathToYes> => {
   try {
-    console.log('[Claude] Calculating path to yes');
+    if (import.meta.env.DEV) console.log('[Claude] Calculating path to yes');
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -712,7 +712,7 @@ export const calculatePathToYes = async (current: {
 
 export const discoverMarkets = async (input: MarketDiscoveryInput): Promise<MarketList> => {
   try {
-    console.log('[Claude] Discovering markets for budget:', input.budget);
+    if (import.meta.env.DEV) console.log('[Claude] Discovering markets for budget:', input.budget);
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 4096,
@@ -731,7 +731,7 @@ export const scoreCompStrength = async (
   subject: { beds: number; baths: number; sqft: number; amenities: string[] }
 ): Promise<CompScore> => {
   try {
-    console.log('[Claude] Scoring comp strength');
+    if (import.meta.env.DEV) console.log('[Claude] Scoring comp strength');
     const content = await claudeProxy({
       model: getModel('complex_analysis'),
       max_tokens: 2048,

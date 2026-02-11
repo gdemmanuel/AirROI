@@ -183,16 +183,18 @@ const App: React.FC = () => {
   // Prepare STR data (from web search only - RentCast doesn't provide STR data)
   const strData = useMemo(() => {
     if (webSTRQuery.data) {
-      setIsUsingWebData(true);
       return {
         rent: webSTRQuery.data.adr,
         occupancy: webSTRQuery.data.occupancy / 100,
         source: 'web_search'
       };
     }
-    // Reset badge when web search has no data (demo mode)
-    setIsUsingWebData(false);
     return null;
+  }, [webSTRQuery.data]);
+
+  // Track web data badge state (side effect must be in useEffect, not useMemo)
+  useEffect(() => {
+    setIsUsingWebData(!!webSTRQuery.data);
   }, [webSTRQuery.data]);
 
   // Main property analysis (runs after all data is fetched)

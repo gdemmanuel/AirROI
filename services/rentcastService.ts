@@ -1,5 +1,5 @@
-
 // All RentCast API calls go through /api/rentcast/* — API key is never in the browser
+const isDev = import.meta.env.DEV;
 
 export interface RentCastProperty {
     id: string;
@@ -27,35 +27,32 @@ export const fetchPropertyData = async (address: string): Promise<RentCastProper
         const cleanAddress = address.trim();
         const encodedAddress = encodeURIComponent(cleanAddress);
 
-        console.log(`[RentCast] Fetching data for: ${cleanAddress}`);
+        if (isDev) console.log(`[RentCast] Fetching data for: ${cleanAddress}`);
 
-        // 1. Try to get Active Listings (the most accurate for current Price)
-        const listingRes = await fetch(`/api/rentcast/listings/sale?address=${encodedAddress}&status=Active`);
+        // Fetch listings, AVM, and property record in parallel (they're independent)
+        const [listingRes, avmRes, propRes] = await Promise.all([
+            fetch(`/api/rentcast/listings/sale?address=${encodedAddress}&status=Active`),
+            fetch(`/api/rentcast/avm/value?address=${encodedAddress}`).catch(() => null),
+            fetch(`/api/rentcast/properties?address=${encodedAddress}`),
+        ]);
 
+        // 1. Active Listings (most accurate for current Price)
         let listingData: any;
         if (listingRes.ok) {
             const listings = await listingRes.json();
             if (listings && listings.length > 0) {
                 listingData = listings[0];
-                console.log(`[RentCast] Found active listing price: $${listingData.price}`);
+                if (isDev) console.log(`[RentCast] Found active listing price: $${listingData.price}`);
             }
         }
 
-        // 2. Try Valuation (AVM) endpoint - often has more recent prices
+        // 2. Valuation (AVM) endpoint
         let avmPrice: number | undefined;
-        try {
-            const avmRes = await fetch(`/api/rentcast/avm/value?address=${encodedAddress}`);
-            if (avmRes.ok) {
-                const avm = await avmRes.json();
-                avmPrice = avm.price;
-                console.log(`[RentCast] AVM Estimate: $${avmPrice}`);
-            }
-        } catch (e) {
-            console.warn("[RentCast] AVM fetch failed", e);
+        if (avmRes && avmRes.ok) {
+            const avm = await avmRes.json();
+            avmPrice = avm.price;
+            if (isDev) console.log(`[RentCast] AVM Estimate: $${avmPrice}`);
         }
-
-        // 3. Get Property Record (for structural details and TAX/HOA)
-        const propRes = await fetch(`/api/rentcast/properties?address=${encodedAddress}`);
 
         if (!propRes.ok) {
             const errorText = await propRes.text();
@@ -94,7 +91,7 @@ export const fetchPropertyData = async (address: string): Promise<RentCastProper
                 if (years.length > 0) {
                     const latestTax = property.propertyTaxes[years[0]].total;
                     taxMonthly = Math.round(latestTax / 12);
-                    console.log(`[RentCast] Found Tax for ${years[0]}: $${latestTax} ($${taxMonthly}/mo)`);
+                    if (isDev) console.log(`[RentCast] Found Tax for ${years[0]}: $${latestTax} ($${taxMonthly}/mo)`);
                 }
             }
 
@@ -102,13 +99,13 @@ export const fetchPropertyData = async (address: string): Promise<RentCastProper
             let hoaMonthly = 0;
             if (property.hoa && property.hoa.fee) {
                 hoaMonthly = property.hoa.fee;
-                console.log(`[RentCast] Found HOA Fee: $${hoaMonthly}/mo`);
+                if (isDev) console.log(`[RentCast] Found HOA Fee: $${hoaMonthly}/mo`);
             }
 
             const finalImages = listingData?.images && listingData.images.length > 0 ? listingData.images : (property.images || []);
             const finalMainImage = listingData?.propertyImage || (listingData?.images && listingData.images[0]) || (property.images && property.images[0]);
 
-            console.log(`[RentCast] Image Data:`, {
+            if (isDev) console.log(`[RentCast] Image Data:`, {
                 listingImages: listingData?.images?.length || 0,
                 propertyImages: property.images?.length || 0,
                 finalMainImage: finalMainImage ? 'Found' : 'Missing'
@@ -165,7 +162,7 @@ export const fetchRentEstimate = async (address: string): Promise<any | null> =>
 
         const data = await response.json();
         
-        console.log(`[RentCast] Rent Estimate Response:`, {
+        if (isDev) console.log(`[RentCast] Rent Estimate Response:`, {
             rent: data.rent,
             hasComps: data.comparableProperties ? data.comparableProperties.length : 0
         });
@@ -182,11 +179,11 @@ export const fetchRentEstimate = async (address: string): Promise<any | null> =>
  * Use searchWebForSTRData() from claudeService.ts instead.
  */
 export const fetchSTRData = async (address: string, propertyType?: string, bedrooms?: number, bathrooms?: number): Promise<any | null> => {
-    console.log('[RentCast] Note: RentCast does not support short-term rental data. Using Claude web search instead.');
+    if (isDev) console.log('[RentCast] Note: RentCast does not support short-term rental data. Using Claude web search instead.');
     return null;
 }
 
 export const fetchSTRComps = async (address: string, propertyType?: string, bedrooms?: number, bathrooms?: number): Promise<any | null> => {
-    console.log('[RentCast] STR comps not available via API - Claude will use general market knowledge');
+    if (isDev) console.log('[RentCast] STR comps not available via API - Claude will use general market knowledge');
     return null;
 }

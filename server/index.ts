@@ -1,7 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
 import { claudeCache, rentcastCache } from './cache.js';
 import { authMiddleware, createSession, startSessionCleanup, TIER_LIMITS } from './auth.js';
@@ -9,9 +12,23 @@ import { authMiddleware, createSession, startSessionCleanup, TIER_LIMITS } from 
 // Load environment variables from .env
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(express.json({ limit: '10mb' }));
-app.use(cors());
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP breaks inline styles from Tailwind — configure properly for prod
+}));
+
+// CORS — restrict to known origins in production
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+app.use(cors({ origin: allowedOrigins }));
+
 app.use(authMiddleware);
 
 // Start session cleanup
@@ -21,8 +38,8 @@ startSessionCleanup();
 // API KEY VALIDATION
 // ============================================================================
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
-const RENTCAST_API_KEY = process.env.RENTCAST_API_KEY || process.env.VITE_RENTCAST_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const RENTCAST_API_KEY = process.env.RENTCAST_API_KEY;
 
 if (!ANTHROPIC_API_KEY || !ANTHROPIC_API_KEY.startsWith('sk-ant-')) {
   console.error('❌ ANTHROPIC_API_KEY is missing or invalid. Set it in .env');
@@ -32,7 +49,8 @@ if (!RENTCAST_API_KEY) {
   console.warn('⚠️  RENTCAST_API_KEY is missing. RentCast endpoints will return errors.');
 }
 
-console.log('✅ API keys loaded successfully');
+const isDev = process.env.NODE_ENV !== 'production';
+if (isDev) console.log('✅ API keys loaded successfully');
 
 // ============================================================================
 // ANTHROPIC CLIENT (server-side only — never exposed to browser)
@@ -95,11 +113,11 @@ app.post('/api/claude/messages', claudeLimiter, async (req, res) => {
     const cacheKey = `claude:${JSON.stringify({ model, messages, tools, system })}`;
     const cached = claudeCache.get(cacheKey);
     if (cached) {
-      console.log(`[Server] Cache HIT for Claude request`);
+      if (isDev) console.log(`[Server] Cache HIT for Claude request`);
       return res.json({ content: cached, cached: true });
     }
 
-    console.log(`[Server] Proxying Claude request: model=${model}, max_tokens=${max_tokens}`);
+    if (isDev) console.log(`[Server] Proxying Claude request: model=${model}, max_tokens=${max_tokens}`);
 
     const createParams: any = { model, max_tokens, messages };
     if (tools) createParams.tools = tools;
@@ -124,8 +142,8 @@ app.post('/api/claude/messages', claudeLimiter, async (req, res) => {
     }
 
     return res.status(error.status || 500).json({
-      error: error.message || 'Claude API call failed',
-      type: error.error?.type || 'api_error',
+      error: 'Claude API call failed',
+      type: 'api_error',
     });
   }
 });
@@ -145,11 +163,11 @@ app.post('/api/claude/analysis', analysisLimiter, async (req, res) => {
     const cacheKey = `analysis:${JSON.stringify({ model, messages })}`;
     const cached = claudeCache.get(cacheKey);
     if (cached) {
-      console.log(`[Server] Cache HIT for analysis request`);
+      if (isDev) console.log(`[Server] Cache HIT for analysis request`);
       return res.json({ content: cached, cached: true });
     }
 
-    console.log(`[Server] Proxying analysis request: model=${model}`);
+    if (isDev) console.log(`[Server] Proxying analysis request: model=${model}`);
 
     const createParams: any = { model, max_tokens, messages };
     if (tools) createParams.tools = tools;
@@ -173,8 +191,8 @@ app.post('/api/claude/analysis', analysisLimiter, async (req, res) => {
     }
 
     return res.status(error.status || 500).json({
-      error: error.message || 'Analysis failed',
-      type: error.error?.type || 'api_error',
+      error: 'Analysis failed',
+      type: 'api_error',
     });
   }
 });
@@ -201,11 +219,11 @@ app.use('/api/rentcast', async (req, res) => {
     const cacheKey = `rentcast:${url}`;
     const cached = rentcastCache.get(cacheKey);
     if (cached) {
-      console.log(`[Server] Cache HIT for RentCast: ${req.url}`);
+      if (isDev) console.log(`[Server] Cache HIT for RentCast: ${req.url}`);
       return res.json(cached);
     }
 
-    console.log(`[Server] Proxying RentCast request: ${req.url}`);
+    if (isDev) console.log(`[Server] Proxying RentCast request: ${req.url}`);
 
     const response = await fetch(url, {
       headers: {
@@ -219,7 +237,6 @@ app.use('/api/rentcast', async (req, res) => {
       console.error(`[Server] RentCast error: ${response.status} - ${errorText}`);
       return res.status(response.status).json({
         error: `RentCast API error: ${response.status}`,
-        details: errorText,
       });
     }
 
@@ -245,8 +262,9 @@ app.use('/api/rentcast', async (req, res) => {
  * In production, replace with real login (Supabase, NextAuth, etc.)
  */
 app.post('/api/auth/session', (req, res) => {
-  const { tier } = req.body || {};
-  const { token, session } = createSession(tier === 'pro' ? 'pro' : 'free');
+  // Tier is always 'free' for anonymous sessions.
+  // In production, tier will be determined by Supabase/DB lookup after login.
+  const { token, session } = createSession('free');
   res.json({
     token,
     userId: session.userId,
@@ -274,6 +292,22 @@ app.get('/api/health', (req, res) => {
       rentcast: !!RENTCAST_API_KEY,
     },
   });
+});
+
+// ============================================================================
+// STATIC FILES — Serve Vite build output in production
+// ============================================================================
+
+const distPath = path.resolve(__dirname, '..', 'dist');
+app.use(express.static(distPath));
+
+// SPA fallback: serve index.html for any non-API route
+app.get('*', (req, res) => {
+  // Don't serve index.html for API routes (they'll 404 naturally)
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // ============================================================================

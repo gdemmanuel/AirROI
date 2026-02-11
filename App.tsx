@@ -6,6 +6,10 @@ import {
   Save, Printer, Home, Layers, Ruler, Plus, Trash, Briefcase, MapPin, Sparkles, PlusCircle,
   FileBarChart, ArrowLeftRight, Edit3, Check, Armchair, User, UserCheck, ShieldPlus, AlertTriangle, FileText, Waves, Thermometer, Gamepad2, Map, Target, ChevronDown
 } from 'lucide-react';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import { useToast } from './components/ui/ToastContext';
+import { CacheStatusBadge, DataSourceIndicator } from './components/ui/StatusBadge';
+import ProgressIndicator, { useAnalysisProgress, AnalysisStep } from './components/ui/ProgressIndicator';
 import { PropertyConfig, MarketInsight, MonthlyProjection, SavedAssessment, Amenity, RentalStrategy } from './types';
 import { DEFAULT_CONFIG, AMENITIES } from './constants';
 import { calculateMonthlyProjections, aggregateToYearly } from './utils/financialLogic';
@@ -26,6 +30,8 @@ import { useRentCastData, useWebSTRData, usePropertyAnalysis } from './src/hooks
 
 
 const App: React.FC = () => {
+  const toast = useToast();
+  const progress = useAnalysisProgress();
   const [baseConfig, setBaseConfig] = useState<PropertyConfig>(DEFAULT_CONFIG);
   const [amenities, setAmenities] = useState<Amenity[]>(AMENITIES);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>(['furnishings']);
@@ -274,6 +280,7 @@ const App: React.FC = () => {
       setActiveTab('dashboard');
       setIsAnalyzing(false);
       setAnalysisError(null);
+      progress.reset(); // Reset progress indicator
       
       // Clear advanced analysis when new property is analyzed
       setSensitivityData(null);
@@ -289,6 +296,7 @@ const App: React.FC = () => {
       console.error("Full analysis error:", error);
       setAnalysisError(error.message?.includes("429") ? "AI capacity exceeded. Please retry in 60 seconds." : `Underwriting failed: ${error.message || "Please check the address."}`);
       setIsAnalyzing(false);
+      progress.reset(); // Reset progress on error
     }
   }, [analysisQuery.isError, analysisQuery.error]);
 
@@ -296,6 +304,39 @@ const App: React.FC = () => {
   useEffect(() => {
     setIsFetchingFactual(rentCastQueries.isLoading);
   }, [rentCastQueries.isLoading]);
+
+  // Track progress through analysis steps
+  useEffect(() => {
+    if (!progress.isVisible) return;
+    
+    // Update progress based on query states
+    if (analysisQuery.isSuccess) {
+      progress.updateStep('complete');
+    } else if (analysisQuery.isFetching || canAnalyze) {
+      progress.updateStep('analysis');
+    } else if (webSTRQuery.isSuccess || webSTRQuery.isFetching) {
+      progress.updateStep('webSearch');
+    } else if (rentEstimateQuery.isSuccess || rentEstimateQuery.isFetching) {
+      progress.updateStep('rent');
+    } else if (marketStatsQuery.isSuccess || marketStatsQuery.isFetching) {
+      progress.updateStep('market');
+    } else if (propertyQuery.isFetching || propertyQuery.isSuccess) {
+      progress.updateStep('property');
+    }
+  }, [
+    progress.isVisible,
+    propertyQuery.isFetching,
+    propertyQuery.isSuccess,
+    marketStatsQuery.isFetching,
+    marketStatsQuery.isSuccess,
+    rentEstimateQuery.isFetching,
+    rentEstimateQuery.isSuccess,
+    webSTRQuery.isFetching,
+    webSTRQuery.isSuccess,
+    analysisQuery.isFetching,
+    analysisQuery.isSuccess,
+    canAnalyze
+  ]);
 
   const saveAssessment = () => {
     if (!insight) return;
@@ -694,6 +735,7 @@ const App: React.FC = () => {
     setPropertyInput(''); // Clear input to prevent suggestions from re-appearing
     isSelectingRef.current = true;
     setIsAnalyzing(true);
+    progress.start(); // Start progress indicator
     
     // For repeat searches, we need to manually trigger a check since
     // React will skip the state update if targetAddress hasn't changed
@@ -714,7 +756,13 @@ const App: React.FC = () => {
       const newAm: Amenity = { id: Date.now().toString(), name: newAmenityName, cost: suggestion.cost || 5000, adrBoost: suggestion.adrBoost || 20, occBoost: suggestion.occBoost || 3, icon: 'Sparkles', active: true };
       setAmenities(prev => [...prev, newAm]);
       setNewAmenityName('');
-    } finally { setIsSuggestingAmenity(false); }
+      toast.success(`Added ${newAmenityName} to amenities`);
+    } catch (e: any) {
+      console.error('Failed to add amenity:', e);
+      toast.error('Failed to analyze amenity. Please try again.');
+    } finally { 
+      setIsSuggestingAmenity(false); 
+    }
   };
 
   const toggleAmenity = (amenityId: string) => {
@@ -784,8 +832,12 @@ const App: React.FC = () => {
         dscr: totalDscr  // Use Total DSCR (includes HELOC interest)
       });
       setSensitivityData(result);
-    } catch (e) {
+      toast.success('Sensitivity analysis complete');
+    } catch (e: any) {
       console.error('Sensitivity analysis failed:', e);
+      toast.error(e?.message?.includes('429') 
+        ? 'Rate limit exceeded. Please wait a moment and try again.' 
+        : 'Sensitivity analysis failed. Please try again.');
     } finally {
       setIsLoadingSensitivity(false);
     }
@@ -814,8 +866,12 @@ const App: React.FC = () => {
         amenities: amenityList
       });
       setAmenityROIData(result);
-    } catch (e) {
+      toast.success('Amenity ROI analysis complete');
+    } catch (e: any) {
       console.error('Amenity ROI analysis failed:', e);
+      toast.error(e?.message?.includes('429') 
+        ? 'Rate limit exceeded. Please wait a moment and try again.' 
+        : 'Amenity ROI analysis failed. Please try again.');
     } finally {
       setIsLoadingAmenityROI(false);
     }
@@ -842,8 +898,12 @@ const App: React.FC = () => {
         cashInvested: cashPortion  // Pass cash invested for CoC N/A handling
       });
       setPathToYesData(result);
-    } catch (e) {
+      toast.success('Path to Yes calculated');
+    } catch (e: any) {
       console.error('Path to yes calculation failed:', e);
+      toast.error(e?.message?.includes('429') 
+        ? 'Rate limit exceeded. Please wait a moment and try again.' 
+        : 'Path to Yes calculation failed. Please try again.');
     } finally {
       setIsLoadingPathToYes(false);
     }
@@ -879,8 +939,12 @@ const App: React.FC = () => {
         sources: insight.sources?.map(s => ({ title: s.title, url: s.uri })) || []
       });
       setLenderPacket(result);
-    } catch (e) {
+      toast.success('Lender packet generated');
+    } catch (e: any) {
       console.error('Lender packet generation failed:', e);
+      toast.error(e?.message?.includes('429') 
+        ? 'Rate limit exceeded. Please wait a moment and try again.' 
+        : 'Lender packet generation failed. Please try again.');
     } finally {
       setIsLoadingLenderPacket(false);
     }
@@ -982,6 +1046,17 @@ const App: React.FC = () => {
           {analysisError && <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-4"><AlertTriangle size={20} className="text-[#f43f5e]" /><p className="text-[10px] font-black uppercase text-[#f43f5e] tracking-widest">{analysisError}</p></div>}
         </div>
 
+        {/* Progress Indicator - shown during long-running analysis */}
+        {progress.isVisible && (
+          <div className="max-w-[600px] mx-auto mt-6 mb-8">
+            <ProgressIndicator 
+              currentStep={progress.currentStep}
+              isVisible={progress.isVisible}
+              startTime={progress.startTime}
+            />
+          </div>
+        )}
+
         {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && insight && (
           <div className="space-y-4 animate-in fade-in duration-700 max-w-[1600px] mx-auto">
@@ -997,7 +1072,14 @@ const App: React.FC = () => {
 
                       <div className="h-4 w-[1px] bg-white/10" />
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
+                        {/* Cache Status Badge */}
+                        {analysisQuery.dataUpdatedAt && (
+                          <CacheStatusBadge 
+                            isCached={analysisQuery.fetchStatus === 'idle' && !analysisQuery.isFetching}
+                            updatedAt={analysisQuery.dataUpdatedAt}
+                          />
+                        )}
                         {insight && (
                           <>
                             {insight.dataSource?.adrSource && (
@@ -1148,40 +1230,48 @@ const App: React.FC = () => {
               {/* 2x2 Grid of Advanced Components */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Sensitivity Analysis */}
-                <SensitivityTable
-                  data={sensitivityData}
-                  isLoading={isLoadingSensitivity}
-                  onRefresh={handleRunSensitivity}
-                />
+                <ErrorBoundary>
+                  <SensitivityTable
+                    data={sensitivityData}
+                    isLoading={isLoadingSensitivity}
+                    onRefresh={handleRunSensitivity}
+                  />
+                </ErrorBoundary>
 
                 {/* Amenity ROI */}
-                <AmenityROIPanel
-                  data={amenityROIData}
-                  isLoading={isLoadingAmenityROI}
-                  onRefresh={handleRunAmenityROI}
-                />
+                <ErrorBoundary>
+                  <AmenityROIPanel
+                    data={amenityROIData}
+                    isLoading={isLoadingAmenityROI}
+                    onRefresh={handleRunAmenityROI}
+                  />
+                </ErrorBoundary>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Path to Yes */}
-                <PathToYesPanel
-                  data={pathToYesData}
-                  isLoading={isLoadingPathToYes}
-                  onRefresh={handleRunPathToYes}
-                  liveKpis={{
-                    capRate: capRate,
-                    cashOnCash: cashOnCash,
-                    dscr: totalDscr  // Use Total DSCR for consistency
-                  }}
-                  targets={investmentTargets}  // Use dynamic targets from state
-                />
+                <ErrorBoundary>
+                  <PathToYesPanel
+                    data={pathToYesData}
+                    isLoading={isLoadingPathToYes}
+                    onRefresh={handleRunPathToYes}
+                    liveKpis={{
+                      capRate: capRate,
+                      cashOnCash: cashOnCash,
+                      dscr: totalDscr  // Use Total DSCR for consistency
+                    }}
+                    targets={investmentTargets}  // Use dynamic targets from state
+                  />
+                </ErrorBoundary>
 
                 {/* Lender Packet Export */}
-                <LenderPacketExport
-                  packet={lenderPacket}
-                  isLoading={isLoadingLenderPacket}
-                  onGenerate={handleGenerateLenderPacket}
-                />
+                <ErrorBoundary>
+                  <LenderPacketExport
+                    packet={lenderPacket}
+                    isLoading={isLoadingLenderPacket}
+                    onGenerate={handleGenerateLenderPacket}
+                  />
+                </ErrorBoundary>
               </div>
             </div>
 
@@ -1218,7 +1308,9 @@ const App: React.FC = () => {
         {activeTab === 'analytics' && (
           <div className="max-w-[1600px] mx-auto">
             {monthlyData && monthlyData.length > 0 ? (
-              <Charts data={monthlyData} />
+              <ErrorBoundary>
+                <Charts data={monthlyData} />
+              </ErrorBoundary>
             ) : (
               <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
                 <BarChart3 size={48} className="mx-auto mb-4 text-slate-600" />

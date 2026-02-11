@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { FileText, Download, Loader2, Building2, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Award } from 'lucide-react';
+import { FileText, Download, Loader2, Building2, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Award, AlertCircle } from 'lucide-react';
 import { LenderPacket } from '../prompts/underwriting';
+import { PanelLoadingState } from './ui/LoadingSpinner';
 
 interface LenderPacketExportProps {
   packet: LenderPacket | null;
   isLoading?: boolean;
   onGenerate?: () => void;
+  error?: string | null;
 }
 
-const LenderPacketExport: React.FC<LenderPacketExportProps> = ({ packet, isLoading, onGenerate }) => {
+const LenderPacketExport: React.FC<LenderPacketExportProps> = ({ packet, isLoading, onGenerate, error }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'financial' | 'market' | 'risks'>('summary');
 
@@ -351,12 +353,28 @@ const LenderPacketExport: React.FC<LenderPacketExportProps> = ({ packet, isLoadi
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 flex flex-col items-center justify-center shadow-lg">
-        <Loader2 size={48} className="animate-spin text-indigo-500 mb-4" />
-        <span className="text-slate-700 font-black text-sm uppercase tracking-widest">
-          Generating Professional Lender Packet...
-        </span>
-        <span className="text-slate-500 text-xs mt-2">This may take 10-15 seconds</span>
+      <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 shadow-lg">
+        <PanelLoadingState message="Generating Professional Lender Packet..." color="indigo" />
+        <p className="text-slate-500 text-xs mt-2 text-center">This may take 10-15 seconds</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-2xl border-2 border-rose-200 p-8 text-center shadow-lg">
+        <div className="flex flex-col items-center gap-3">
+          <AlertCircle className="text-rose-500" size={32} />
+          <p className="text-rose-600 font-black text-sm uppercase tracking-widest">{error}</p>
+          {onGenerate && (
+            <button
+              onClick={onGenerate}
+              className="mt-2 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-black text-xs uppercase tracking-widest"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
       </div>
     );
   }

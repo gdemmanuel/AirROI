@@ -4,6 +4,9 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './src/index.css';
 import { ReactQueryProvider } from './src/lib/queryClient';
+import ErrorBoundary, { AppCrashFallback } from './components/ui/ErrorBoundary';
+import { ToastProvider } from './components/ui/ToastContext';
+import { ToastContainer } from './components/ui/Toast';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,8 +16,13 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ReactQueryProvider>
-      <App />
-    </ReactQueryProvider>
+    <ErrorBoundary fallback={<AppCrashFallback />}>
+      <ToastProvider>
+        <ReactQueryProvider>
+          <App />
+        </ReactQueryProvider>
+        <ToastContainer />
+      </ToastProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

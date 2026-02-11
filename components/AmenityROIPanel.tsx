@@ -1,20 +1,40 @@
 import React from 'react';
 import { TrendingUp, Award, Clock, AlertCircle, DollarSign } from 'lucide-react';
 import { AmenityROIResult } from '../prompts/underwriting';
+import { PanelLoadingState } from './ui/LoadingSpinner';
 
 interface AmenityROIPanelProps {
     data: AmenityROIResult | null;
     isLoading?: boolean;
     onRefresh?: () => void;
+    error?: string | null;
 }
 
-const AmenityROIPanel: React.FC<AmenityROIPanelProps> = ({ data, isLoading, onRefresh }) => {
+const AmenityROIPanel: React.FC<AmenityROIPanelProps> = ({ data, isLoading, onRefresh, error }) => {
     if (isLoading) {
         return (
-            <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 flex flex-col items-center justify-center shadow-lg">
-                <div className="animate-spin w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full mb-4" />
-                <span className="text-slate-700 font-black text-sm uppercase tracking-widest">Analyzing Amenity ROI...</span>
-                <span className="text-slate-500 text-xs mt-2">This may take 10-15 seconds</span>
+            <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 shadow-lg">
+                <PanelLoadingState message="Analyzing Amenity ROI..." color="rose" />
+                <p className="text-slate-500 text-xs mt-2 text-center">This may take 10-15 seconds</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-white rounded-2xl border-2 border-rose-200 p-8 text-center shadow-lg">
+                <div className="flex flex-col items-center gap-3">
+                    <AlertCircle className="text-rose-500" size={32} />
+                    <p className="text-rose-600 font-black text-sm uppercase tracking-widest">{error}</p>
+                    {onRefresh && (
+                        <button
+                            onClick={onRefresh}
+                            className="mt-2 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-black text-xs uppercase tracking-widest"
+                        >
+                            Try Again
+                        </button>
+                    )}
+                </div>
             </div>
         );
     }

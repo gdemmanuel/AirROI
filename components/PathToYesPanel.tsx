@@ -2,6 +2,7 @@ import React from 'react';
 import { Zap, Target, ChevronRight, ArrowRight, CheckCircle, AlertTriangle, TrendingUp, AlertCircle, XCircle } from 'lucide-react';
 import { PathToYes } from '../prompts/underwriting';
 import InfoTooltip from './InfoTooltip';
+import { PanelLoadingState } from './ui/LoadingSpinner';
 
 interface PathToYesPanelProps {
     data: PathToYes | null;
@@ -18,6 +19,7 @@ interface PathToYesPanelProps {
         minCoC: number;
         minDSCR: number;
     };
+    error?: string | null;
 }
 
 // 5-tier status configuration
@@ -29,13 +31,31 @@ const statusConfig: Record<string, { bg: string; border: string; text: string; i
     'No-Buy': { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-600', icon: XCircle }
 };
 
-const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefresh, onApplyRecommendation, liveKpis, targets }) => {
+const PathToYesPanel: React.FC<PathToYesPanelProps> = ({ data, isLoading, onRefresh, onApplyRecommendation, liveKpis, targets, error }) => {
     if (isLoading) {
         return (
-            <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 flex flex-col items-center justify-center shadow-lg">
-                <div className="animate-spin w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full mb-4" />
-                <span className="text-slate-700 font-black text-sm uppercase tracking-widest">Calculating Path to Yes...</span>
-                <span className="text-slate-500 text-xs mt-2">This may take 10-15 seconds</span>
+            <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 shadow-lg">
+                <PanelLoadingState message="Calculating Path to Yes..." color="rose" />
+                <p className="text-slate-500 text-xs mt-2 text-center">This may take 10-15 seconds</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-white rounded-2xl border-2 border-rose-200 p-8 text-center shadow-lg">
+                <div className="flex flex-col items-center gap-3">
+                    <AlertCircle className="text-rose-500" size={32} />
+                    <p className="text-rose-600 font-black text-sm uppercase tracking-widest">{error}</p>
+                    {onRefresh && (
+                        <button
+                            onClick={onRefresh}
+                            className="mt-2 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-black text-xs uppercase tracking-widest"
+                        >
+                            Try Again
+                        </button>
+                    )}
+                </div>
             </div>
         );
     }

@@ -1225,27 +1225,22 @@ const App: React.FC = () => {
               <div className="bg-white p-6 rounded-2xl border border-slate-100 flex flex-col h-full"><div className="flex items-center gap-3 mb-5"><div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-500"><ShieldCheck size={16} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.2em]">Recommendation</h3></div><div className="p-6 bg-[#0f172a] rounded-xl text-white flex-1"><BulletContent text={insight.recommendation} isDark /></div></div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] border border-slate-100 flex flex-col"><div className="flex items-center gap-3 mb-8 border-b pb-6"><div className="p-3 bg-rose-50 rounded-xl text-rose-500"><MapPin size={18} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Market Comps</h3>{insight.dataSource?.compsSource && <span className={`ml-auto text-[8px] font-black px-2 py-1 rounded-full ${insight.dataSource.compsSource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{insight.dataSource.compsSource === 'RentCast' ? '✓ RentCast' : 'AI'}</span>}</div><div className="space-y-3">{insight.comps.slice(0, 3).map((c, i) => (<div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all group"><p className="text-[11px] font-black text-slate-800 truncate mb-2 uppercase">{c.address}</p><div className="flex justify-between text-[10px] font-black uppercase tracking-tight"><div className="flex gap-3"><span className="text-slate-600">{c.price}</span><span className="text-emerald-600">{c.annualRevenue} REV</span></div><div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{((parseInt(c.annualRevenue.replace(/[^0-9]/g, '')) / (parseInt(c.price.replace(/[^0-9]/g, '')) || 1)) * 100).toFixed(1)}% YIELD</div></div></div>))}</div></div>
-              <div className="lg:col-span-2"><PropertyChat insight={insight} config={baseConfig} /></div>
-            </div>
-
             {/* ADVANCED ANALYSIS SECTION */}
-            <div className="mt-12 pt-8 border-t border-slate-200">
-              <div className="flex items-center justify-between mb-8">
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
-                    <Sparkles size={20} />
+                  <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
+                    <Sparkles size={18} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900">Advanced Analysis</h2>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">AI-Powered Deep Dive Tools</p>
+                    <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">Advanced Analysis</h2>
+                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">AI-Powered Deep Dive Tools</p>
                   </div>
                 </div>
               </div>
 
               {/* 2x2 Grid of Advanced Components - Path to Yes & Amenity ROI first (most used) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
                 {/* Path to Yes */}
                 <ErrorBoundary>
                   <PathToYesPanel
@@ -1271,7 +1266,7 @@ const App: React.FC = () => {
                 </ErrorBoundary>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {/* Sensitivity Analysis */}
                 <ErrorBoundary>
                   <SensitivityTable
@@ -1290,6 +1285,12 @@ const App: React.FC = () => {
                   />
                 </ErrorBoundary>
               </div>
+            </div>
+
+            {/* Market Comps & AI Deal Analyst */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+              <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] border border-slate-100 flex flex-col"><div className="flex items-center gap-3 mb-8 border-b pb-6"><div className="p-3 bg-rose-50 rounded-xl text-rose-500"><MapPin size={18} /></div><h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Market Comps</h3>{insight.dataSource?.compsSource && <span className={`ml-auto text-[8px] font-black px-2 py-1 rounded-full ${insight.dataSource.compsSource === 'RentCast' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{insight.dataSource.compsSource === 'RentCast' ? '✓ RentCast' : 'AI'}</span>}</div><div className="space-y-3">{insight.comps.slice(0, 3).map((c, i) => (<div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all group"><p className="text-[11px] font-black text-slate-800 truncate mb-2 uppercase">{c.address}</p><div className="flex justify-between text-[10px] font-black uppercase tracking-tight"><div className="flex gap-3"><span className="text-slate-600">{c.price}</span><span className="text-emerald-600">{c.annualRevenue} REV</span></div><div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{((parseInt(c.annualRevenue.replace(/[^0-9]/g, '')) / (parseInt(c.price.replace(/[^0-9]/g, '')) || 1)) * 100).toFixed(1)}% YIELD</div></div></div>))}</div></div>
+              <div className="lg:col-span-2"><PropertyChat insight={insight} config={baseConfig} /></div>
             </div>
 
             {/* Sources & Citations */}

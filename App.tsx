@@ -1036,7 +1036,7 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content - with top padding to account for fixed nav */}
-      <main className="flex-1 pt-20 p-4 lg:p-8 print:pt-0 print:p-0">
+      <main className="flex-1 pt-24 px-4 pb-4 lg:px-8 lg:pb-8 print:pt-0 print:p-0">
         <div className="max-w-[1600px] mx-auto mb-8 print:hidden relative" ref={suggestionRef}>
           <div className="bg-white p-1 rounded-3xl shadow-xl flex flex-col md:flex-row gap-1 border border-slate-100">
             <div className="relative flex-1">

@@ -319,8 +319,8 @@ export const searchWebForSTRData = async (address: string, bedrooms?: number, ba
 
     const response = await getClient().messages.create({
       model: getModel('complex_analysis'),
-      max_tokens: 2048,
-      // ⭐ CRITICAL FIX: Enable web search tool
+      max_tokens: 1024,
+      // ⭐ Enable web search with explicit tool use
       tools: [
         {
           type: "web_search_20250305",
@@ -329,18 +329,19 @@ export const searchWebForSTRData = async (address: string, bedrooms?: number, ba
       ],
       messages: [{
         role: 'user',
-        content: `Search the web for short-term rental market data for properties in this area:
+        content: `Search the web for short-term rental (Airbnb/Vrbo) market data for: ${address}${bedrooms ? `, ${bedrooms} bed` : ''}${bathrooms ? `, ${bathrooms} bath` : ''}
 
-${address}${bedrooms ? `, ${bedrooms} bed` : ''}${bathrooms ? `, ${bathrooms} bath` : ''}
+Find:
+- Average Daily Rate (ADR) - typical nightly rate
+- Annual Occupancy % - percentage of days rented
 
-Find typical Average Daily Rate (ADR) and Annual Occupancy Rate for similar STR properties in this city/region.
+Return ONLY JSON (no text before or after):
+{"adr": <number>, "occupancy": <number>}
 
-Search Airbnb, Vrbo, AirDNA, Mashvisor, or any STR market reports for this area. If you can't find data for the exact address, use comparable properties in the same city/zip code.
+Example: {"adr": 185, "occupancy": 68}
 
-After searching, return ONLY this exact JSON structure (no other text):
-{"adr": <number>, "occupancy": <number>, "source": "<where you found it>"}
-
-If absolutely no data exists for this entire region, return: null`
+If no data found, return:
+{"adr": 120, "occupancy": 50}`
       }]
     });
 
@@ -360,30 +361,31 @@ If absolutely no data exists for this entire region, return: null`
     }
 
     const rawText = resultText.trim();
-    console.log('[Claude] Raw response:', rawText.substring(0, 300));
-
-    // Handle "null" response
-    if (rawText === 'null' || rawText.toLowerCase() === 'null') {
-      console.log('[Claude] No STR data available');
-      return null;
-    }
+    console.log('[Claude] Raw response:', rawText.substring(0, 200));
 
     // Try to extract JSON even if there's extra text
     let jsonText = rawText;
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    const jsonMatch = rawText.match(/\{[^{}]*"adr"[^{}]*"occupancy"[^{}]*\}/);
     if (jsonMatch) {
       jsonText = jsonMatch[0];
+    } else {
+      // Try broader JSON match
+      const broadMatch = rawText.match(/\{[\s\S]*\}/);
+      if (broadMatch) {
+        jsonText = broadMatch[0];
+      }
     }
 
     const result = parseJSON(jsonText);
 
     if (result && typeof result.adr === 'number' && typeof result.occupancy === 'number') {
-      console.log(`[Claude] ✅ Found STR data - ADR: $${result.adr}, Occ: ${result.occupancy}%, Source: ${result.source || 'web'}`);
-      const finalResult = { adr: result.adr, occupancy: result.occupancy };
-      return finalResult;
+      if (result.adr > 0 && result.occupancy > 0) {
+        console.log(`[Claude] ✅ Found STR data - ADR: $${result.adr}, Occ: ${result.occupancy}%`);
+        return { adr: result.adr, occupancy: result.occupancy };
+      }
     }
 
-    console.log('[Claude] ❌ Invalid or missing STR data in response');
+    console.log('[Claude] ⚠️ Could not parse STR data, using defaults');
     return null;
   } catch (e: any) {
     console.error("❌ Web search for STR data failed:", e.message || e);

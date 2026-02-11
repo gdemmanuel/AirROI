@@ -953,9 +953,9 @@ const App: React.FC = () => {
   const currentRateValue = strategy === 'STR' ? finalConfig.adr : (strategy === 'MTR' ? finalConfig.mtrMonthlyRent / 30 : finalConfig.ltrMonthlyRent / 30);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row print:bg-white print:block">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col print:bg-white print:block">
       {showSaveToast && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] bg-[#1e293b] text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-6 duration-500 border border-white/10 ring-8 ring-black/5">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-[#1e293b] text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-6 duration-500 border border-white/10 ring-8 ring-black/5">
           <div className="bg-[#f43f5e] p-2 rounded-full"><Save size={16} /></div>
           <p className="text-xs font-black uppercase tracking-widest leading-none">DEAL SAVED TO REPORTS</p>
         </div>
@@ -963,7 +963,7 @@ const App: React.FC = () => {
 
       {/* Rate Limit Countdown Toast */}
       {rateLimitCountdown > 0 && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] bg-amber-500 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-pulse border border-amber-400 ring-8 ring-amber-500/20">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-amber-500 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-pulse border border-amber-400 ring-8 ring-amber-500/20">
           <div className="bg-white/20 p-2 rounded-full">
             <Loader2 size={16} className="animate-spin" />
           </div>
@@ -983,43 +983,60 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* Horizontal Top Navigation */}
+      <nav className="w-full bg-[#0f172a] text-white px-4 lg:px-8 py-3 fixed top-0 left-0 right-0 z-50 border-b border-slate-800 print:hidden">
+        <div className="max-w-[1800px] mx-auto flex items-center justify-between gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="p-1.5 bg-white rounded-lg text-slate-900"><Calculator size={18} /></div>
+            <h1 className="text-lg font-black tracking-tighter uppercase leading-none hidden sm:block">AirROI <span className="text-[#f43f5e]">PRO</span></h1>
+          </div>
 
-      <nav className="w-full lg:w-48 bg-[#0f172a] text-white p-5 lg:fixed lg:h-full z-50 flex flex-col border-r border-slate-800 transition-all print:hidden">
-        <div className="flex items-center gap-2 mb-10 px-1">
-          <div className="p-2 bg-white rounded-xl text-slate-900"><Calculator size={20} /></div>
-          <h1 className="text-xl font-black tracking-tighter uppercase leading-none">AirROI <span className="text-[#f43f5e]">PRO</span></h1>
-        </div>
-        <div className="space-y-2 mb-6 flex-1">
-          {[
-            { id: 'dashboard', icon: LayoutDashboard, label: 'Audit' },
-            { id: 'analytics', icon: BarChart3, label: 'Performance' },
-            { id: 'monthly', icon: Calendar, label: 'Monthly' },
-            { id: 'yearly', icon: TrendingUp, label: 'Yearly' },
-            { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
-            { id: 'assumptions', icon: Settings, label: 'Settings' }
-          ].map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all font-black text-[12px] uppercase tracking-wider ${activeTab === item.id ? 'bg-[#1e293b] text-white shadow-xl' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
-            >
-              <div className="w-5 flex justify-center shrink-0"><item.icon size={18} /></div>
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.id === 'portfolio' && savedAssessments.length > 0 && (
-                <span className="px-2 py-0.5 bg-[#f43f5e] text-white rounded-full text-[9px] font-black">{savedAssessments.length}</span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="p-3 bg-[#1e293b]/50 rounded-2xl flex flex-col gap-2 mb-6 border border-white/5">
-          <p className="text-[10px] font-black uppercase text-slate-500 px-2 py-1 tracking-widest">Strategy</p>
-          {[{ id: 'STR', label: 'SHORT', color: 'bg-[#f43f5e]' }, { id: 'MTR', label: 'MID', color: 'bg-blue-500' }, { id: 'LTR', label: 'LONG', color: 'bg-[#10b981]' }].map(s => (
-            <button key={s.id} onClick={() => setStrategy(s.id as RentalStrategy)} className={`w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${strategy === s.id ? `${s.color} text-white shadow-xl` : 'text-slate-200 hover:text-white hover:bg-white/5'}`}>{s.label}</button>
-          ))}
+          {/* Navigation Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            {[
+              { id: 'dashboard', icon: LayoutDashboard, label: 'Audit' },
+              { id: 'analytics', icon: BarChart3, label: 'Performance' },
+              { id: 'monthly', icon: Calendar, label: 'Monthly' },
+              { id: 'yearly', icon: TrendingUp, label: 'Yearly' },
+              { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
+              { id: 'assumptions', icon: Settings, label: 'Settings' }
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-lg transition-all font-black text-[10px] lg:text-[11px] uppercase tracking-wider whitespace-nowrap ${activeTab === item.id ? 'bg-[#1e293b] text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+              >
+                <item.icon size={14} />
+                <span className="hidden md:inline">{item.label}</span>
+                {item.id === 'portfolio' && savedAssessments.length > 0 && (
+                  <span className="px-1.5 py-0.5 bg-[#f43f5e] text-white rounded-full text-[8px] font-black">{savedAssessments.length}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Strategy Toggle */}
+          <div className="flex items-center gap-1 bg-[#1e293b]/50 rounded-lg p-1 border border-white/5 shrink-0">
+            {[
+              { id: 'STR', label: 'STR', color: 'bg-[#f43f5e]' },
+              { id: 'MTR', label: 'MTR', color: 'bg-blue-500' },
+              { id: 'LTR', label: 'LTR', color: 'bg-[#10b981]' }
+            ].map(s => (
+              <button
+                key={s.id}
+                onClick={() => setStrategy(s.id as RentalStrategy)}
+                className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${strategy === s.id ? `${s.color} text-white shadow-lg` : 'text-slate-400 hover:text-white'}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 
-      <main className="flex-1 lg:ml-48 p-4 lg:p-10 print:ml-0 print:p-0">
+      {/* Main Content - with top padding to account for fixed nav */}
+      <main className="flex-1 pt-16 p-4 lg:p-8 print:pt-0 print:p-0">
         <div className="max-w-[1600px] mx-auto mb-8 print:hidden relative" ref={suggestionRef}>
           <div className="bg-white p-1 rounded-3xl shadow-xl flex flex-col md:flex-row gap-1 border border-slate-100">
             <div className="relative flex-1">
@@ -1227,14 +1244,20 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2x2 Grid of Advanced Components */}
+              {/* 2x2 Grid of Advanced Components - Path to Yes & Amenity ROI first (most used) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Sensitivity Analysis */}
+                {/* Path to Yes */}
                 <ErrorBoundary>
-                  <SensitivityTable
-                    data={sensitivityData}
-                    isLoading={isLoadingSensitivity}
-                    onRefresh={handleRunSensitivity}
+                  <PathToYesPanel
+                    data={pathToYesData}
+                    isLoading={isLoadingPathToYes}
+                    onRefresh={handleRunPathToYes}
+                    liveKpis={{
+                      capRate: capRate,
+                      cashOnCash: cashOnCash,
+                      dscr: totalDscr  // Use Total DSCR for consistency
+                    }}
+                    targets={investmentTargets}  // Use dynamic targets from state
                   />
                 </ErrorBoundary>
 
@@ -1249,18 +1272,12 @@ const App: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Path to Yes */}
+                {/* Sensitivity Analysis */}
                 <ErrorBoundary>
-                  <PathToYesPanel
-                    data={pathToYesData}
-                    isLoading={isLoadingPathToYes}
-                    onRefresh={handleRunPathToYes}
-                    liveKpis={{
-                      capRate: capRate,
-                      cashOnCash: cashOnCash,
-                      dscr: totalDscr  // Use Total DSCR for consistency
-                    }}
-                    targets={investmentTargets}  // Use dynamic targets from state
+                  <SensitivityTable
+                    data={sensitivityData}
+                    isLoading={isLoadingSensitivity}
+                    onRefresh={handleRunSensitivity}
                   />
                 </ErrorBoundary>
 

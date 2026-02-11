@@ -21,7 +21,7 @@ const steps: AnalysisStepConfig[] = [
   { id: 'market', label: 'Loading market stats', icon: <Database size={14} />, estimatedSeconds: 3 },
   { id: 'rent', label: 'Getting rent estimates', icon: <Database size={14} />, estimatedSeconds: 3 },
   { id: 'webSearch', label: 'Searching STR market data', icon: <Globe size={14} />, estimatedSeconds: 15 },
-  { id: 'analysis', label: 'Running AI analysis', icon: <Sparkles size={14} />, estimatedSeconds: 60 },
+  { id: 'analysis', label: 'Running deep AI analysis', icon: <Sparkles size={14} />, estimatedSeconds: 60 },
 ];
 
 interface ProgressIndicatorProps {

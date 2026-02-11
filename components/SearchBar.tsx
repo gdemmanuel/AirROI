@@ -24,15 +24,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
           <input type="text" placeholder="Enter property address..." className="w-full pl-16 pr-8 py-4 bg-white border-none rounded-2xl outline-none text-[15px] font-black text-slate-800" value={propertyInput} onChange={(e) => onInputChange(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && onSearch()} />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {isUsingWebData ? (
+            {isUsingWebData && (
               <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 rounded-full border border-purple-100">
                 <Sparkles className="w-3 h-3" />
                 <span className="text-[10px] font-black uppercase tracking-tight">Web Search Data</span>
               </div>
-            ) : import.meta.env.VITE_RENTCAST_API_KEY ? (
+            )}
+            {import.meta.env.VITE_RENTCAST_API_KEY && !isUsingWebData && (
               <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 animate-pulse"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-black uppercase tracking-tight">RentCast Live</span></div>
-            ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /><span className="text-[10px] font-black uppercase tracking-tight">Demo Mode</span></div>
             )}
           </div>
         </div>

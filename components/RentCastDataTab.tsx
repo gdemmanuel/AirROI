@@ -30,8 +30,8 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-4 p-4 lg:p-8 animate-in fade-in duration-700">
-      {/* Property Value & Listing Intel Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Property Value & Listing Intel & Owner/Agent Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* AVM Value Range */}
         {propertyData?.avmValueRange && (
           <div className="bg-white rounded-xl border border-slate-100 p-6">
@@ -106,6 +106,65 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
             </div>
           </div>
         )}
+
+        {/* Owner Information & Listing Agent */}
+        <div className="space-y-4">
+          {/* Owner Information */}
+          {propertyData?.owner && (
+            <div className="bg-white rounded-xl border border-slate-100 p-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-4">Owner Information</h3>
+              <div className="space-y-3">
+                {propertyData.owner.names && propertyData.owner.names.length > 0 && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 font-black">OWNER NAME</p>
+                    {propertyData.owner.names.map((name, i) => (
+                      <p key={i} className="text-sm font-black text-slate-900">{name}</p>
+                    ))}
+                  </div>
+                )}
+                {propertyData.owner.type && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 font-black">OWNER TYPE</p>
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-black ${propertyData.owner.type === 'Individual' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{propertyData.owner.type}</span>
+                  </div>
+                )}
+                {propertyData.owner.ownerOccupied !== undefined && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 font-black">STATUS</p>
+                    <span className={`text-sm font-black ${propertyData.owner.ownerOccupied ? 'text-green-600' : 'text-blue-600'}`}>{propertyData.owner.ownerOccupied ? 'Owner Occupied' : 'Investor/Vacant'}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Listing Agent */}
+          {propertyData?.listingDetails?.listingAgent?.name && (
+            <div className="bg-white rounded-xl border border-slate-100 p-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-4">Listing Agent</h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-black text-slate-900">{propertyData.listingDetails.listingAgent.name}</p>
+                  {propertyData.listingDetails.listingOffice?.name && (
+                    <p className="text-xs text-slate-500 mt-1">{propertyData.listingDetails.listingOffice.name}</p>
+                  )}
+                </div>
+                {propertyData.listingDetails.listingAgent.phone && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 font-black">PHONE</p>
+                    <p className="text-sm font-black text-blue-600">{propertyData.listingDetails.listingAgent.phone}</p>
+                  </div>
+                )}
+                {propertyData.listingDetails.listingAgent.email && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 font-black">EMAIL</p>
+                    <p className="text-sm font-black text-blue-600 break-all">{propertyData.listingDetails.listingAgent.email}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Market Health & Bedroom Stats */}
@@ -241,26 +300,23 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
           {expandedSection === 'saleComps' && (
             <div className="border-t border-slate-100 p-6">
-              <div className="space-y-3">
+              <div className="space-y-0">
                 {propertyData.avmComparables.map((comp, i) => (
-                  <div key={i} className="p-4 border border-slate-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/50 transition-colors">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p className="font-black text-slate-900 text-sm">{comp.formattedAddress}</p>
-                        <p className="text-xs text-slate-500 mt-1">{comp.bedrooms}bd / {comp.bathrooms}ba • {comp.squareFootage?.toLocaleString()}sf</p>
-                      </div>
+                  <div key={i} className={`p-4 flex items-start gap-4 ${i !== propertyData.avmComparables.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-slate-900 text-sm truncate">{comp.formattedAddress}</p>
+                      <p className="text-xs text-slate-500 mt-1">{comp.bedrooms}bd / {comp.bathrooms}ba • {comp.squareFootage?.toLocaleString()}sf</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-black text-slate-900 text-sm">{formatCurrency(comp.price)}</p>
+                      <p className="text-xs text-slate-500 mt-1">{comp.distance?.toFixed(1)}mi • {comp.daysOnMarket}DOM</p>
                       {comp.correlation != null && (
-                        <span className={`px-3 py-1 rounded text-xs font-black whitespace-nowrap ml-2 ${
+                        <span className={`inline-block px-2 py-1 rounded text-[10px] font-black mt-2 ${
                           comp.correlation >= 0.9 ? 'bg-emerald-100 text-emerald-700' :
                           comp.correlation >= 0.7 ? 'bg-amber-100 text-amber-700' :
                           'bg-slate-100 text-slate-600'
                         }`}>{(comp.correlation * 100).toFixed(0)}% match</span>
                       )}
-                    </div>
-                    <div className="flex gap-4 text-xs text-slate-600">
-                      <span className="font-black text-slate-900">{formatCurrency(comp.price)}</span>
-                      {comp.distance != null && <span>{comp.distance.toFixed(1)}mi away</span>}
-                      {comp.daysOnMarket != null && <span>{comp.daysOnMarket} DOM</span>}
                     </div>
                   </div>
                 ))}
@@ -285,18 +341,16 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
           {expandedSection === 'rentals' && (
             <div className="border-t border-slate-100 p-6">
-              <div className="space-y-3">
+              <div className="space-y-0">
                 {rentalListings.map((listing, i) => (
-                  <div key={i} className="p-4 border border-slate-100 rounded-lg hover:border-green-200 hover:bg-green-50/50 transition-colors">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p className="font-black text-slate-900 text-sm">{listing.formattedAddress}</p>
-                        <p className="text-xs text-slate-500 mt-1">{listing.bedrooms}bd / {listing.bathrooms}ba • {listing.squareFootage?.toLocaleString()}sf</p>
-                      </div>
+                  <div key={i} className={`p-4 flex items-start gap-4 ${i !== rentalListings.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-slate-900 text-sm truncate">{listing.formattedAddress}</p>
+                      <p className="text-xs text-slate-500 mt-1">{listing.bedrooms}bd / {listing.bathrooms}ba • {listing.squareFootage?.toLocaleString()}sf</p>
                     </div>
-                    <div className="flex gap-4 text-xs text-slate-600">
-                      <span className="font-black text-emerald-700">{formatCurrency(listing.price)}/mo</span>
-                      {listing.daysOnMarket && <span>{listing.daysOnMarket} DOM</span>}
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-black text-emerald-700 text-sm">{formatCurrency(listing.price)}/mo</p>
+                      {listing.daysOnMarket && <p className="text-xs text-slate-500 mt-1">{listing.daysOnMarket} DOM</p>}
                     </div>
                   </div>
                 ))}

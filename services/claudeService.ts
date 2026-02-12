@@ -825,9 +825,32 @@ export const scoreCompStrength = async (
   }
 };
 
+// Cache for amenity cost estimates (keyed by address to avoid repeated Claude calls)
+const amenityCostCache = new Map<string, { data: any; timestamp: number }>();
+const AMENITY_CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+let lastAmenityCostEstimationTime = 0;
+const AMENITY_ESTIMATION_THROTTLE = 5000; // Minimum 5 seconds between estimations
+
 export const estimateAmenityCosts = async (address: string, propertyType: string, marketData: any) => {
   try {
+    // Check cache first
+    const cached = amenityCostCache.get(address);
+    if (cached && Date.now() - cached.timestamp < AMENITY_CACHE_DURATION) {
+      if (import.meta.env.DEV) console.log('[Claude] Using cached amenity costs for:', address);
+      return cached.data;
+    }
+
+    // Throttle rapid calls to avoid rate limiting
+    const timeSinceLastEstimation = Date.now() - lastAmenityCostEstimationTime;
+    if (timeSinceLastEstimation < AMENITY_ESTIMATION_THROTTLE) {
+      const waitTime = AMENITY_ESTIMATION_THROTTLE - timeSinceLastEstimation;
+      if (import.meta.env.DEV) console.log(`[Claude] Throttling amenity estimation, waiting ${waitTime}ms`);
+      await sleep(waitTime);
+    }
+
     if (import.meta.env.DEV) console.log('[Claude] Estimating amenity costs for:', address);
+    lastAmenityCostEstimationTime = Date.now();
+    
     const content = await claudeProxy({
       model: getModel('simple_task'), // Fast + cheap (Haiku)
       max_tokens: 800,
@@ -835,6 +858,10 @@ export const estimateAmenityCosts = async (address: string, propertyType: string
     });
     const text = extractText(content);
     const result = parseJSON(text);
+    
+    // Cache the result
+    amenityCostCache.set(address, { data: result, timestamp: Date.now() });
+    
     if (import.meta.env.DEV) console.log('[Claude] Amenity costs estimated:', result);
     return result;
   } catch (e) {

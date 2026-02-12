@@ -27,6 +27,7 @@ const NavBar: React.FC<NavBarProps> = ({ activeTab, setActiveTab, strategy, setS
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {[
             { id: 'dashboard', icon: LayoutDashboard, label: 'Audit' },
+            { id: 'rentcast', icon: BarChart3, label: 'RentCast Data' },
             { id: 'analytics', icon: BarChart3, label: 'Performance' },
             { id: 'monthly', icon: Calendar, label: 'Monthly' },
             { id: 'yearly', icon: TrendingUp, label: 'Yearly' },

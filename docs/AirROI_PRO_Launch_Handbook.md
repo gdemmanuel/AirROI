@@ -1,8 +1,8 @@
 # AirROI PRO Launch Handbook
 **Real Estate Investment Intelligence Platform**
 
-**Version:** 1.0  
-**Date:** February 2026  
+**Version:** 2.0
+**Date:** February 2026
 **Document Type:** Product Launch Guide
 
 ---
@@ -12,12 +12,17 @@
 1. [Product Vision & Positioning](#1-product-vision--positioning)
 2. [MVP Scope, User Stories & Acceptance Criteria](#2-mvp-scope-user-stories--acceptance-criteria)
 3. [System Architecture & Data Flow](#3-system-architecture--data-flow)
-4. [Data Sources & Modeling Details](#4-data-sources--modeling-details)
-5. [Security, Compliance & Reliability](#5-security-compliance--reliability)
-6. [Deployment Plan - Step by Step](#6-deployment-plan---step-by-step)
-7. [Data Model](#7-data-model)
-8. [Pricing & Packaging](#8-pricing--packaging)
-9. [Financial Plan - Charts & KPIs](#9-financial-plan---charts--kpis)
+4. [Technology Stack](#4-technology-stack)
+5. [File Map & Component Reference](#5-file-map--component-reference)
+6. [Data Sources & API Integration](#6-data-sources--api-integration)
+7. [AI Architecture & Prompt Library](#7-ai-architecture--prompt-library)
+8. [Caching, Rate Limiting & Performance](#8-caching-rate-limiting--performance)
+9. [Security & Compliance](#9-security--compliance)
+10. [Deployment Guide](#10-deployment-guide)
+11. [Data Model](#11-data-model)
+12. [Pricing & Packaging](#12-pricing--packaging)
+13. [Financial Plan & KPIs](#13-financial-plan--kpis)
+14. [Roadmap & Future Phases](#14-roadmap--future-phases)
 
 ---
 
@@ -27,24 +32,18 @@
 AirROI PRO empowers real estate investors to make data-driven acquisition decisions for short-term rental (STR), mid-term rental (MTR), and long-term rental (LTR) properties with AI-powered underwriting, real-time market data, and comprehensive financial projections.
 
 ### Target Market
-| Segment | Description | Size (US) |
-|---------|-------------|-----------|
-| **Primary** | Individual STR investors (1-5 properties) | ~2.1M hosts |
-| **Secondary** | Small property management companies | ~150K companies |
-| **Tertiary** | Real estate agents serving investors | ~1.5M agents |
+
+- **Primary**: Individual STR investors (1-5 properties) — ~2.1M hosts in the US
+- **Secondary**: Small property management companies — ~150K companies
+- **Tertiary**: Real estate agents serving investors — ~1.5M agents
 
 ### Competitive Positioning
 
-| Feature | AirROI PRO | AirDNA | Mashvisor | Rabbu |
-|---------|-----------|--------|-----------|-------|
-| AI-Powered Analysis | ✅ Claude AI | ❌ | ❌ | ❌ |
-| Multi-Strategy (STR/MTR/LTR) | ✅ | ❌ STR only | ✅ | ❌ STR only |
-| Real-Time Property Data | ✅ RentCast | ✅ | ✅ | ✅ |
-| 20-Year Projections | ✅ | ❌ | ❌ | ❌ |
-| HELOC Financing Model | ✅ | ❌ | ❌ | ❌ |
-| Seasonality Modeling | ✅ 12-month | ✅ | ❌ | ❌ |
-| Portfolio Comparison | ✅ | ✅ | ✅ | ❌ |
-| Price Point | $29-99/mo | $99-399/mo | $99-149/mo | $99-249/mo |
+- **AI-Powered Analysis**: Claude AI (Sonnet 4 + Haiku) — competitors have none
+- **Multi-Strategy**: STR/MTR/LTR in one tool — most competitors are STR-only
+- **20-Year Projections**: Full amortization with HELOC modeling — unique in market
+- **RentCast Integration**: 6 API endpoints for comprehensive property + market data
+- **Price Point**: $29-99/mo vs. $99-399/mo for AirDNA, Mashvisor, Rabbu
 
 ### Value Proposition
 **"Underwrite any property in 60 seconds with institutional-grade AI analysis at a fraction of the cost."**
@@ -53,78 +52,63 @@ AirROI PRO empowers real estate investors to make data-driven acquisition decisi
 
 ## 2. MVP Scope, User Stories & Acceptance Criteria
 
-### MVP Feature Set (Current Implementation)
+### Current Feature Set (v2.0)
 
-| Category | Features Included |
-|----------|-------------------|
-| **Property Analysis** | Address lookup, AI underwriting, market comparables |
-| **Financial Modeling** | 20-year projections, 3 rental strategies, seasonality |
-| **Capital Structure** | Down payment, HELOC funding, mortgage calculations |
-| **Portfolio Management** | Save assessments, compare up to 4 properties |
-| **Export** | PDF report generation |
+- **Property Analysis**: Address lookup, AI audit, RentCast data, market comparables
+- **Financial Modeling**: 20-year projections, 3 rental strategies, seasonality
+- **Capital Structure**: Down payment, HELOC funding, mortgage calculations
+- **Advanced AI Tools**: Sensitivity analysis, amenity ROI, path to yes, lender packet, regulation scanner
+- **RentCast Intelligence**: AVM valuations, sale/rental comps, market trends, owner/agent info
+- **Admin Dashboard**: API metrics, model usage, cache management, health monitoring
+- **Portfolio Management**: Save assessments, compare up to 4 properties
+- **Export**: PDF report generation with AI analysis
 
-### User Stories & Acceptance Criteria
+### User Stories
 
-#### US-001: Property Search & Analysis
-**As an** investor  
-**I want to** enter a property address and receive a complete analysis  
-**So that** I can quickly evaluate acquisition opportunities
+**US-001: Property Search & Analysis**
+As an investor, I want to enter a property address and receive a complete analysis so I can quickly evaluate acquisition opportunities.
 
-| Acceptance Criteria | Status |
-|---------------------|--------|
-| Address autocomplete suggestions appear after 5 characters | ✅ Implemented |
-| Property data fetched from RentCast within 3 seconds | ✅ Implemented |
-| AI analysis completes within 15 seconds | ✅ Implemented |
-| Results display beds, baths, sqft, year built | ✅ Implemented |
-| Suggested ADR, occupancy, and monthly revenue populated | ✅ Implemented |
+- Address autocomplete suggestions appear after 5 characters — DONE
+- Property data fetched from RentCast within 3 seconds — DONE
+- AI analysis completes within 90 seconds (first search) — DONE
+- Repeat searches return in under 1 second (cached) — DONE
+- Results display beds, baths, sqft, year built, property features — DONE
+- Suggested ADR, occupancy, and monthly revenue populated — DONE
 
-#### US-002: Multi-Strategy Comparison
-**As an** investor  
-**I want to** compare STR, MTR, and LTR scenarios  
-**So that** I can choose the optimal rental strategy
+**US-002: Multi-Strategy Comparison**
+As an investor, I want to compare STR, MTR, and LTR scenarios so I can choose the optimal rental strategy.
 
-| Acceptance Criteria | Status |
-|---------------------|--------|
-| Toggle between STR/MTR/LTR with one click | ✅ Implemented |
-| Each strategy shows unique revenue/expense calculations | ✅ Implemented |
-| Cap Rate and Cash-on-Cash update per strategy | ✅ Implemented |
-| Pro forma scenarios show Conservative/Base/Aggressive | ✅ Implemented |
+- Toggle between STR/MTR/LTR with one click — DONE
+- Each strategy shows unique revenue/expense calculations — DONE
+- Cap Rate and Cash-on-Cash update per strategy — DONE
+- Pro forma scenarios show Conservative/Base/Aggressive — DONE
 
-#### US-003: Financial Projections
-**As an** investor  
-**I want to** see 20-year cash flow projections  
-**So that** I can understand long-term returns
+**US-003: Financial Projections**
+As an investor, I want to see 20-year cash flow projections so I can understand long-term returns.
 
-| Acceptance Criteria | Status |
-|---------------------|--------|
-| Monthly projections for 240 months | ✅ Implemented |
-| Yearly aggregation with cumulative totals | ✅ Implemented |
-| Seasonality applied to STR (12 monthly factors) | ✅ Implemented |
-| HELOC interest and paydown calculated | ✅ Implemented |
-| Property appreciation factored into equity | ✅ Implemented |
+- Monthly projections for 240 months — DONE
+- Yearly aggregation with cumulative totals — DONE
+- Seasonality applied to STR (12 monthly factors) — DONE
+- HELOC interest and paydown calculated — DONE
+- Property appreciation factored into equity — DONE
 
-#### US-004: Portfolio Management
-**As an** investor  
-**I want to** save and compare multiple properties  
-**So that** I can prioritize my acquisition pipeline
+**US-004: RentCast Market Intelligence**
+As an investor, I want comprehensive market data so I can validate AI analysis with real numbers.
 
-| Acceptance Criteria | Status |
-|---------------------|--------|
-| Save assessment to local storage | ✅ Implemented |
-| Load saved assessments from Portfolio tab | ✅ Implemented |
-| Compare up to 4 properties side-by-side | ✅ Implemented |
-| Delete individual assessments | ✅ Implemented |
+- AVM value range with comparables — DONE
+- Sale history, tax assessments, owner info — DONE
+- Market health metrics and trend charts — DONE
+- Active rental listings with bedroom matching — DONE
+- Listing agent contact information — DONE
 
-#### US-005: Export & Reporting
-**As an** investor  
-**I want to** export a professional PDF report  
-**So that** I can share analysis with partners/lenders
+**US-005: Admin Monitoring**
+As an administrator, I want to monitor API usage, costs, and system health.
 
-| Acceptance Criteria | Status |
-|---------------------|--------|
-| PDF includes property details, metrics, and AI analysis | ✅ Implemented |
-| Professional formatting with branded header | ✅ Implemented |
-| Sources and citations included | ✅ Implemented |
+- Server health overview (uptime, memory, sessions) — DONE
+- Per-endpoint API metrics with response times — DONE
+- Claude model usage tracking (Sonnet vs Haiku) — DONE
+- Cache hit rates and management controls — DONE
+- Rate limit configuration display — DONE
 
 ---
 
@@ -133,844 +117,612 @@ AirROI PRO empowers real estate investors to make data-driven acquisition decisi
 ### High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           CLIENT (Browser)                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │   React UI   │  │  Financial   │  │   Charts     │  │   Export     │ │
-│  │   (App.tsx)  │  │    Logic     │  │  (Recharts)  │  │   (Print)    │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘ │
-│                              │                                           │
-│  ┌───────────────────────────────────────────────────────────────────┐  │
-│  │                      Service Layer                                 │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐ │  │
-│  │  │ RentCast API │  │ Claude AI    │  │ Google Street View API   │ │  │
-│  │  │   Service    │  │   Service    │  │      Service             │ │  │
-│  │  └──────────────┘  └──────────────┘  └──────────────────────────┘ │  │
-│  └───────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-            │  RentCast   │ │  Anthropic  │ │   Google    │
-            │     API     │ │     API     │ │  Maps API   │
-            │ (Property   │ │  (Claude    │ │ (Street     │
-            │   Data)     │ │ Sonnet 4)   │ │   View)     │
-            └─────────────┘ └─────────────┘ └─────────────┘
+Browser (Vite :3000)
+    |
+    | /api proxy
+    v
+Express Server (:3002)
+    |-- helmet, CORS, rate limiting
+    |-- Auth middleware (session-based)
+    |-- Metrics middleware (request logging)
+    |-- TTL Cache (in-memory)
+    |
+    |-- /api/claude/messages    --> Anthropic API (Claude Sonnet 4 / Haiku)
+    |-- /api/claude/analysis    --> Anthropic API (stricter rate limit)
+    |-- /api/rentcast/*         --> RentCast API (transparent passthrough)
+    |-- /api/admin/metrics      --> In-memory MetricsStore
+    |-- /api/admin/cache/clear  --> Cache management
+    |-- /api/auth/session       --> Session creation
+    |-- /api/health             --> Health check
+    |
+    |-- Static files (dist/)    --> SPA fallback
 ```
 
-### Data Flow Sequence
+### Data Flow: Property Analysis
 
 ```
-User Input (Address)
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Step 1: Fetch Property Data (RentCast)                      │
-│   • Active Listings API → Current listing price             │
-│   • AVM Value API → Automated valuation                     │
-│   • Properties API → Beds, baths, sqft, tax, HOA           │
-│   • STR AVM API → ADR, occupancy estimates                  │
-│   • STR Comps API → Nearby rental comparables               │
-└─────────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Step 2: AI Analysis (Claude Sonnet 4)                       │
-│   • Market snapshot and regulations                         │
-│   • Break-even analysis                                     │
-│   • Pro forma scenarios (3 tiers)                          │
-│   • Risk assessment and recommendation                      │
-│   • Sources and citations                                   │
-└─────────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Step 3: Financial Projections (Client-Side)                 │
-│   • 20-year monthly cash flow                               │
-│   • Seasonality factors applied                             │
-│   • Mortgage amortization                                   │
-│   • HELOC interest and paydown                              │
-│   • Cap Rate, Cash-on-Cash, Gross Yield                    │
-└─────────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Step 4: Property Image (Fallback Logic)                     │
-│   • If RentCast has image → Use RentCast image             │
-│   • Else → Generate Google Street View URL                  │
-└─────────────────────────────────────────────────────────────┘
-        │
-        ▼
-    Dashboard Render
+User enters address
+    |
+    v
+Step 1: RentCast Data (parallel calls)
+    |-- /properties?address=...          --> Property details, features, history
+    |-- /avm/value?address=...           --> AVM value range + sale comps
+    |-- /listings/sale?address=...       --> Active sale listing
+    |-- /avm/rent/long-term?address=...  --> Rent estimate + rental comps
+    |-- /markets?zipCode=...&dataType=All --> Market stats (sale + rental)
+    |-- /listings/rental/long-term?zip=...&beds=... --> Active rental listings
+    |
+    v
+Step 2: Claude AI Web Search
+    |-- Web search for STR-specific data (ADR, occupancy, regulations)
+    |-- 5-second delay to prevent rate limiting
+    |
+    v
+Step 3: Claude AI Analysis (Sonnet 4)
+    |-- Property audit with RentCast ground truth
+    |-- Market snapshot, regulations, risk assessment
+    |-- Pro forma scenarios (3 tiers)
+    |-- Recommendation and next steps
+    |
+    v
+Step 4: Client-Side Financial Engine
+    |-- 20-year monthly projections
+    |-- Seasonality factors (STR)
+    |-- Mortgage amortization + HELOC paydown
+    |-- KPI calculation (Cap Rate, CoC, DSCR, NOI)
+    |
+    v
+Dashboard renders all data
 ```
 
-### Technology Stack
+### Tab Structure
 
-| Layer | Technology | Version/Details |
-|-------|------------|-----------------|
-| **Frontend Framework** | React | 18.x with TypeScript |
-| **Build Tool** | Vite | 5.x |
-| **UI Components** | Custom + Lucide Icons | Lucide React 0.x |
-| **Charts** | Recharts | 2.x (bar, line, area charts) |
-| **Styling** | Tailwind CSS | 3.x |
-| **AI Model** | Claude Sonnet 4 | claude-sonnet-4-20250514 |
-| **Property Data** | RentCast API | REST API |
-| **Street View** | Google Maps Static API | v1 |
-| **Storage** | Browser LocalStorage | Persistent assessments |
+- **Audit** — Main analysis dashboard with AI insights, KPIs, and amenities
+- **RentCast Data** — Dedicated tab for all RentCast intelligence
+- **Performance** — Charts and visual analytics
+- **Monthly** — Monthly cash flow projections table
+- **Yearly** — Yearly aggregated projections table
+- **Portfolio** — Saved assessments and comparison
+- **Settings** — Global configuration and investment targets
+- **Admin** — System monitoring and cache management
 
 ---
 
-## 4. Data Sources & Modeling Details
+## 4. Technology Stack
 
-### External Data Sources
+### Frontend
 
-#### RentCast API (Primary Data Provider)
-**Base URL:** `https://api.rentcast.io/v1`  
-**Pricing:** ~$0.01-0.05 per API call (varies by endpoint)
+- **React** 19.2.3 with TypeScript 5.8
+- **Vite** 6.2 (build tool, dev server, HMR)
+- **Tailwind CSS** 4.1.18 (PostCSS plugin)
+- **React Query** (@tanstack/react-query 5.90) — client-side caching
+- **Recharts** 3.7 — charts and data visualization
+- **Lucide React** 0.563 — icons
+- **React Markdown** 9.0 — AI response rendering
 
-| Endpoint | Purpose | Data Returned |
-|----------|---------|---------------|
-| `/listings/sale` | Active listing price | Price, status, images |
-| `/avm/value` | Automated valuation | Market value estimate |
-| `/properties` | Property records | Beds, baths, sqft, tax history |
-| `/avm/rent/long-term` | LTR rent estimate | Monthly rent, range |
-| `/avm/rent/short-term` | STR metrics | ADR, occupancy, range |
-| `/listings/rental/short-term` | STR comparables | Nearby STR performance |
-| `/markets/stats` | Market statistics | Avg rent, listings count |
+### Backend
 
-#### Claude AI (Anthropic)
-**Model:** claude-sonnet-4-20250514  
-**Pricing:** $3 per million input tokens, $15 per million output tokens  
-**Average per analysis:** ~$0.02-0.05
+- **Express** 5.2.1 (Node.js server)
+- **Helmet** 8.1 (security headers)
+- **CORS** 2.8.6 (cross-origin resource sharing)
+- **express-rate-limit** 8.2.1 (IP-based rate limiting)
+- **dotenv** 17.2.4 (environment variables)
+- **@anthropic-ai/sdk** 0.32.1 (Claude API client)
 
-| Capability | Usage |
-|------------|-------|
-| Web Search | Real-time market data when RentCast lacks STR info |
-| Analysis | Market snapshot, regulations, recommendation |
-| Underwriting | Pro forma scenarios, break-even analysis |
+### Dev Tools
 
-#### Google Street View Static API
-**Pricing:** $7 per 1,000 requests ($200/month free tier)  
-**Usage:** Fallback when RentCast lacks property images
+- **tsx** 4.21 (TypeScript execution for server)
+- **concurrently** 9.2.1 (parallel dev processes)
+- **PostCSS** 8.5.6 + **Autoprefixer** 10.4.24
 
-### Financial Model Parameters
+### External APIs
 
-#### Default Configuration
-```typescript
-{
-  price: 500000,              // Purchase price
-  downPaymentPercent: 20,     // Down payment %
-  mortgageRate: 6.5,          // Annual mortgage rate %
-  helocRate: 7.5,             // HELOC interest rate %
-  helocFundingPercent: 100,   // % of upfront funded by HELOC
-  loanCosts: 7500,            // Closing costs
-  mgmtFeePercent: 20,         // Property management %
-  maintenancePercent: 5,      // Maintenance reserve %
-  hostFeePercent: 15.5,       // Airbnb/platform fee %
-  adr: 300,                   // Base ADR for STR
-  mtrMonthlyRent: 4500,       // MTR monthly rent
-  ltrMonthlyRent: 3000,       // LTR monthly rent
-  occupancyPercent: 70,       // Base STR occupancy %
-  annualAppreciationRate: 3,  // Property appreciation %
-  annualRentGrowthRate: 3,    // Rent growth %
-  annualExpenseInflationRate: 2 // Expense inflation %
-}
-```
-
-#### Seasonality Factors (STR)
-Monthly multipliers applied to ADR and Occupancy:
-
-| Month | ADR Factor | Occupancy Factor |
-|-------|-----------|------------------|
-| Jan | 1.00 | 0.95 |
-| Feb | 1.05 | 1.00 |
-| Mar | 1.15 | 1.10 |
-| Apr | 0.95 | 0.80 |
-| May | 0.90 | 0.70 |
-| Jun | 1.25 | 1.20 |
-| Jul | 1.35 | 1.30 |
-| Aug | 1.30 | 1.25 |
-| Sep | 1.00 | 0.90 |
-| Oct | 0.85 | 0.75 |
-| Nov | 0.90 | 0.85 |
-| Dec | 1.30 | 1.20 |
-
-#### Strategy-Specific Assumptions
-
-| Parameter | STR | MTR | LTR |
-|-----------|-----|-----|-----|
-| Base Occupancy | User-defined | 90% | 95% |
-| Management Fee | User-defined | Max 15% | Max 10% |
-| Platform Fee | 15.5% | 3% | 0% |
-| Turns/Month | nights ÷ 3.8 | 0.33 | 0.08 |
-| Cleaning Expense | Per-turn | $200/turn | None |
-| Fixed OpEx | User-defined | User-defined | $100/mo |
-
-### Amenity Impact Model
-
-| Amenity | Upfront Cost | ADR Boost | Occupancy Boost |
-|---------|-------------|-----------|-----------------|
-| Initial Furnishings | $25,000 | $0 | 0% |
-| Hot Tub | $8,500 | $45 | 6% |
-| Cedar Sauna | $6,500 | $25 | 4% |
-| Game Room | $4,000 | $20 | 3% |
-| Luxury Deck | $12,000 | $35 | 5% |
-| EV Charger | $1,500 | $5 | 2% |
+- **Anthropic Claude** — AI analysis (Sonnet 4 for complex, Haiku for simple)
+- **RentCast** — Property data, AVM, market stats, comparables
+- **Google Maps** — Street View (key present, not yet integrated in UI)
 
 ---
 
-## 5. Security, Compliance & Reliability
+## 5. File Map & Component Reference
 
-### Current Security Model (MVP)
+### Server (`server/`)
 
-| Category | Implementation | Risk Level |
-|----------|---------------|------------|
-| API Keys | Client-side (Vite env vars) | ⚠️ Medium |
-| Data Storage | Browser LocalStorage | ⚠️ Medium |
-| Authentication | None (single-user) | ⚠️ High for SaaS |
-| HTTPS | Depends on hosting | ✅ Low if using Vercel/Netlify |
-| Input Validation | Basic sanitization | ⚠️ Medium |
+- **index.ts** (346 lines) — Express app, API proxies, rate limiting, admin endpoints, static serving
+- **cache.ts** (84 lines) — TTL in-memory cache with hit/miss tracking
+- **auth.ts** (119 lines) — Session-based auth scaffold, tier limits (not enforced)
+- **metrics.ts** (254 lines) — Request logging, endpoint stats, model usage tracking, middleware
 
-### Production Security Roadmap
+### Services (`services/`)
 
-#### Phase 1: Backend API Proxy (Pre-Launch)
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Client    │────▶│  API Proxy  │────▶│  External   │
-│  (Browser)  │     │  (Vercel/   │     │   APIs      │
-│             │◀────│  Netlify)   │◀────│             │
-└─────────────┘     └─────────────┘     └─────────────┘
-                          │
-                          ▼
-                    API Keys stored
-                    server-side only
-```
+- **claudeService.ts** (824 lines) — All Claude API calls via proxy, retry logic, rate limit handling
+- **rentcastService.ts** (590 lines) — 12+ interfaces, 6 API endpoints, data extraction
+- **streetViewService.ts** (56 lines) — Google Street View URLs (service ready, not wired to UI)
 
-#### Phase 2: Authentication (Post-Launch)
-- Firebase Auth or Auth0 integration
-- User accounts with email/password or Google SSO
-- JWT token-based API access
+### Core Application
 
-#### Phase 3: Data Persistence
-- Firestore or Supabase for cloud storage
-- User-specific saved assessments
-- Audit logging for compliance
+- **App.tsx** (951 lines) — State hub, React Query hooks, computed KPIs, tab routing
+- **src/hooks/usePropertyData.ts** (161 lines) — React Query hooks for RentCast + analysis
+- **src/lib/queryClient.tsx** (64 lines) — Global cache config (24h gc, 5m stale)
+- **prompts/underwriting.ts** (764 lines) — All Claude prompt templates (9 prompts)
 
-### Compliance Considerations
+### Components — Main Tabs
 
-| Regulation | Applicability | Status |
-|------------|--------------|--------|
-| GDPR | If serving EU users | ⚠️ Requires privacy policy |
-| CCPA | If serving CA users | ⚠️ Requires opt-out mechanism |
-| SOC 2 | Enterprise customers | ❌ Not applicable for MVP |
-| PCI DSS | If processing payments | ⚠️ Use Stripe (out of scope) |
+- **DashboardTab.tsx** (362 lines) — Audit view: KPIs, AI analysis, amenities, advanced tools
+- **RentCastDataTab.tsx** (374 lines) — AVM, market health, trends, comps, owner/agent info
+- **AdminTab.tsx** (682 lines) — Admin dashboard with metrics, charts, cache management
+- **PortfolioTab.tsx** (177 lines) — Saved assessments grid with comparison mode
+- **SettingsTab.tsx** (135 lines) — Global settings, investment targets, amenity editor
 
-### Reliability Targets
+### Components — Analysis Panels
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Uptime | 99.5% | N/A (not deployed) |
-| API Response Time | < 3s (data fetch) | ~2-3s |
-| AI Analysis Time | < 15s | ~8-12s |
-| Error Rate | < 1% | ~2% (API failures) |
+- **PathToYesPanel.tsx** (322 lines) — Deal optimization with gap analysis
+- **SensitivityTable.tsx** (194 lines) — ADR/Occupancy/Rate stress testing matrix
+- **AmenityROIPanel.tsx** (176 lines) — Amenity payback with ranking
+- **LenderPacketExport.tsx** (681 lines) — AI-generated lender packet with export
+- **PropertyChat.tsx** (113 lines) — Conversational AI about the property
 
----
+### Components — Data Display
 
-## 6. Deployment Plan - Step by Step
+- **Charts.tsx** (257 lines) — Revenue, cash flow, ROI charts
+- **FinancialTables.tsx** (211 lines) — Monthly/yearly cash flow tables
+- **MarketTrendCharts.tsx** (227 lines) — Historical price/rent trend charts
+- **NavBar.tsx** (73 lines) — Top navigation with tabs and strategy toggle
+- **SearchBar.tsx** (45 lines) — Address input with suggestions
+- **ComparisonModal.tsx** (130 lines) — Side-by-side property comparison
 
-### Phase 1: Development Environment (Current)
-```bash
-# Local development
-npm run dev  # Runs Vite dev server on localhost:5173
-```
+### Components — UI
 
-### Phase 2: Production Build
-```bash
-# 1. Create production build
-npm run build
+- **ui/ErrorBoundary.tsx** (116 lines) — Error boundaries
+- **ui/ProgressIndicator.tsx** (195 lines) — Step-by-step analysis progress
+- **ui/Toast.tsx** + **ui/ToastContext.tsx** (157 lines) — Toast notifications
+- **ui/StatusBadge.tsx** (184 lines) — Status badges
+- **ui/LoadingSpinner.tsx** (100 lines) — Loading states
+- **InfoTooltip.tsx** (38 lines) — Info tooltips for metrics
 
-# 2. Preview production build locally
-npm run preview
+### Utils
 
-# Output: dist/ folder with optimized assets
-```
+- **utils/financialLogic.ts** (212 lines) — Monthly projections, yearly aggregation
+- **utils/exportReport.ts** (265 lines) — HTML report generation + print
+- **utils/formatCurrency.ts** (2 lines) — USD formatter
 
-### Phase 3: Vercel Deployment (Recommended)
+### Config
 
-#### Step 1: Prepare Repository
-```bash
-# Initialize Git (if not done)
-git init
-git add .
-git commit -m "Initial production build"
-
-# Push to GitHub
-git remote add origin https://github.com/YOUR_ORG/airroi-pro.git
-git push -u origin main
-```
-
-#### Step 2: Connect to Vercel
-1. Go to [vercel.com](https://vercel.com)
-2. Click "New Project"
-3. Import your GitHub repository
-4. Configure build settings:
-   - Framework: Vite
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-
-#### Step 3: Configure Environment Variables
-In Vercel Dashboard → Settings → Environment Variables:
-
-| Variable | Value | Environment |
-|----------|-------|-------------|
-| `VITE_ANTHROPIC_API_KEY` | `sk-ant-api03-...` | Production |
-| `VITE_RENTCAST_API_KEY` | `eba8460...` | Production |
-| `VITE_GOOGLE_MAPS_API_KEY` | `AIza...` | Production |
-
-#### Step 4: Deploy
-```bash
-vercel deploy --prod
-```
-
-#### Step 5: Custom Domain (Optional)
-1. Vercel Dashboard → Domains
-2. Add domain: `app.airroi.pro`
-3. Configure DNS:
-   - CNAME: `app` → `cname.vercel-dns.com`
-   - Or A Record: `76.76.21.21`
-
-### Phase 4: API Key Security (Pre-Production)
-
-#### Create Vercel Serverless Functions
-```
-/api/
-  ├── rentcast.ts      # Proxy for RentCast API
-  ├── claude.ts        # Proxy for Anthropic API
-  └── streetview.ts    # Proxy for Google API
-```
-
-Example `/api/rentcast.ts`:
-```typescript
-export default async function handler(req, res) {
-  const API_KEY = process.env.RENTCAST_API_KEY; // Server-side only
-  const { endpoint, params } = req.body;
-  
-  const response = await fetch(`https://api.rentcast.io/v1/${endpoint}?${params}`, {
-    headers: { 'X-Api-Key': API_KEY }
-  });
-  
-  return res.json(await response.json());
-}
-```
-
-### Phase 5: Monitoring Setup
-
-| Tool | Purpose | Configuration |
-|------|---------|---------------|
-| Vercel Analytics | Page views, performance | Enabled by default |
-| Sentry | Error tracking | Install `@sentry/react` |
-| LogRocket | Session replay | Optional for debugging |
-
-### Deployment Checklist
-
-- [ ] All environment variables configured
-- [ ] API keys moved to server-side proxies
-- [ ] HTTPS enforced
-- [ ] Error boundaries implemented
-- [ ] Analytics/monitoring enabled
-- [ ] Custom domain configured
-- [ ] SSL certificate issued
-- [ ] Performance tested (Lighthouse score > 80)
-- [ ] Mobile responsiveness verified
+- **vite.config.ts** (37 lines) — Proxy /api to :3002, HMR, optimizeDeps
+- **types.ts** (152 lines) — Core TypeScript interfaces
+- **constants.ts** (40 lines) — Default config and amenities
 
 ---
 
-## 7. Data Model
+## 6. Data Sources & API Integration
 
-### Current Implementation: LocalStorage
+### RentCast API
 
-The MVP uses browser LocalStorage for persistence. Data is stored as JSON strings.
+**Proxy**: All calls go through `Express /api/rentcast/*` which maps transparently to `https://api.rentcast.io/v1/*`. Server adds the `X-Api-Key` header.
 
-#### Storage Keys
+**Endpoints Used:**
 
-| Key | Description | Type |
-|-----|-------------|------|
-| `airroi_saved_assessments` | Array of saved property analyses | `SavedAssessment[]` |
-| `airroi_amenities` | Custom amenity configurations | `Amenity[]` |
+- `/properties?address=...` — Property details (beds, baths, sqft, features, history, owner, tax)
+- `/avm/value?address=...` — Automated valuation with sale comparables and correlation scores
+- `/listings/sale?address=...&status=Active` — Active sale listing with price, DOM, agent
+- `/avm/rent/long-term?address=...` — Long-term rent estimate with rental comparables
+- `/markets?zipCode=...&dataType=All` — Market statistics (sale + rental combined)
+- `/listings/rental/long-term?zipCode=...&status=Active&limit=10` — Active rental listings
 
-### Data Schemas (TypeScript Interfaces)
+**Data Extracted (12+ interfaces):**
 
-#### PropertyConfig
-```typescript
-interface PropertyConfig {
-  price: number;                    // Purchase price ($)
-  downPaymentPercent: number;       // Down payment (%)
-  mortgageRate: number;             // Annual mortgage rate (%)
-  helocRate: number;                // HELOC interest rate (%)
-  helocFundingPercent: number;      // % of upfront via HELOC
-  upgradeCost: number;              // Renovation cost ($)
-  loanCosts: number;                // Closing costs ($)
-  furnishingsCost: number;          // Furnishing total ($)
-  mgmtFeePercent: number;           // Management fee (%)
-  maintenancePercent: number;       // Maintenance reserve (%)
-  cleaningFeeIncome: number;        // Monthly cleaning income ($)
-  cleaningExpense: number;          // Monthly cleaning expense ($)
-  hostFeePercent: number;           // Platform fee (%)
-  adr: number;                      // Average Daily Rate ($)
-  mtrMonthlyRent: number;           // MTR rent ($)
-  ltrMonthlyRent: number;           // LTR rent ($)
-  expectedMonthlyRevenue: number;   // Target revenue ($)
-  occupancyPercent: number;         // Occupancy rate (%)
-  propertyTaxMonthly: number;       // Monthly tax ($)
-  annualPropertyTaxRate: number;    // Tax rate (%)
-  fixedOpexMonthly: number;         // Fixed expenses ($)
-  hoaMonthly: number;               // HOA fee ($)
-  annualAppreciationRate: number;   // Appreciation (%)
-  annualRentGrowthRate: number;     // Rent growth (%)
-  annualExpenseInflationRate: number; // Inflation (%)
-  helocPaydownPercent: number;      // HELOC paydown allocation (%)
-}
-```
+- `PropertyFeatures` — pool, garage, fireplace, cooling/heating types
+- `SaleHistoryEntry` — historical sales with dates and prices
+- `TaxAssessmentEntry` — tax history with land/improvement breakdowns
+- `PropertyOwner` — owner names, type, occupancy status
+- `AVMComparable` — sale comps with correlation scores, distance, DOM
+- `ListingDetails` — days on market, listing type, agent, MLS, price history
+- `MarketTrendEntry` — historical price/rent data for trend charts
+- `MarketStats` — median prices, DOM, inventory, rental rates
+- `RentalListing` — active rental listings with details
 
-#### MarketInsight (AI Analysis Output)
-```typescript
-interface MarketInsight {
-  summary: string;
-  snapshot: string;                 // Property/market overview
-  regulations: string;              // Local STR regulations
-  marketPerformance: string;        // Market trends
-  debtAssumptions: string;
-  proFormaScenarios: ScenarioData[]; // 3 scenario projections
-  breakEvenAnalysis: string;
-  pathsToYes: string;
-  risksDiligence: string;
-  recommendation: string;
-  nextSteps: string;
-  comps: CompProperty[];            // Market comparables
-  mainImage?: string;               // Property photo URL
-  
-  // Physical specs
-  beds: string;
-  baths: string;
-  sqft: string;
-  lotSize: string;
-  yearBuilt: string;
-  
-  // Suggested values from AI
-  suggestedListingPrice: number;
-  suggestedMonthlyRevenue: number;
-  suggestedOccupancy: number;       // Percentage (0-100)
-  suggestedPropertyTax: number;
-  suggestedCleaningFee: number;
-  suggestedFurnishingsCost: number;
-  suggestedHOA: number;
-  suggestedMTRRent: number;
-  suggestedLTRRent: number;
-  suggestedADR: number;
-  marketRiskLevel: 'Low' | 'Medium' | 'High';
-  verdict: string;
-  sources: { title: string; uri: string }[];
-}
-```
+**Cost**: ~$0.10-0.20 per property search (5-6 API calls)
 
-#### SavedAssessment
-```typescript
-interface SavedAssessment {
-  id: string;                       // UUID
-  address: string;                  // Full address
-  config: PropertyConfig;           // Financial parameters
-  insight: MarketInsight;           // AI analysis
-  selectedAmenities: string[];      // Amenity IDs enabled
-  timestamp: number;                // Unix timestamp
-  strategy: 'STR' | 'MTR' | 'LTR';
-  capRate: number;                  // Calculated cap rate
-  cashOnCash: number;               // Cash-on-cash return
-  price: number;                    // Purchase price
-  annualNoi: number;                // Year 1 NOI
-}
-```
+### Anthropic Claude API
 
-### Future: Firestore Schema (Recommended)
+**Proxy**: `/api/claude/messages` (general) and `/api/claude/analysis` (strict rate limit)
 
-```
-/users/{userId}/
-  ├── profile
-  │   ├── email: string
-  │   ├── displayName: string
-  │   ├── subscription: 'free' | 'pro' | 'enterprise'
-  │   └── createdAt: timestamp
-  │
-  ├── assessments/{assessmentId}/
-  │   ├── address: string
-  │   ├── config: PropertyConfig (map)
-  │   ├── insight: MarketInsight (map)
-  │   ├── strategy: string
-  │   ├── metrics: { capRate, cashOnCash, annualNoi }
-  │   ├── createdAt: timestamp
-  │   └── updatedAt: timestamp
-  │
-  └── settings/
-      ├── defaultConfig: PropertyConfig (map)
-      └── amenities: Amenity[] (array)
-```
+**Models:**
+
+- **Claude Sonnet 4** (`claude-sonnet-4-20250514`) — Complex financial analysis, underwriting, audits
+- **Claude 3.5 Haiku** (`claude-3-5-haiku-20241022`) — Fast tasks, address suggestions, simple queries
+
+**Cost**: ~$0.02-0.05 per analysis call. Average total per full property analysis: ~$0.20-0.25
+
+### Google Maps Static API
+
+- **Key**: `VITE_GOOGLE_MAPS_API_KEY` in .env (client-side)
+- **Status**: Service file exists (`streetViewService.ts`), not yet integrated into UI
+- **Future**: Property + comp map visualization using lat/long from RentCast data
 
 ---
 
-## 8. Pricing & Packaging
+## 7. AI Architecture & Prompt Library
 
-### Pricing Tiers
+### Prompt Library (`prompts/underwriting.ts`)
 
-| Tier | Price | Analyses/Mo | Features |
-|------|-------|-------------|----------|
-| **Free** | $0 | 3 | Basic analysis, no save |
-| **Pro** | $29/mo | 25 | Full features, PDF export, portfolio |
-| **Team** | $79/mo | 100 | Pro + 3 seats, shared portfolios |
-| **Enterprise** | $199/mo | Unlimited | API access, white-label, priority support |
+All prompts return structured JSON for seamless UI integration.
 
-### Cost Structure per Analysis
+- **AUDIT_PROMPT** — Property and market verification with web search. Returns property facts, market snapshot, regulations, suggested values, risks, sources.
+- **UNDERWRITE_PROMPT** — Full KPI calculation with HELOC modeling. Returns NOI, DSCR, cap rate, cash-on-cash, pro forma scenarios.
+- **SENSITIVITY_PROMPT** — ADR/Occupancy/Rate stress testing. Returns 5x5 matrix with breakpoints.
+- **AMENITY_ROI_PROMPT** — Amenity payback analysis with diminishing returns. Returns ranked list with confidence ranges.
+- **REGULATION_SCANNER_PROMPT** — STR regulation lookup with web search. Returns permit requirements, restrictions, zoning.
+- **PACKET_SUMMARY_PROMPT** — Lender-ready one-pager. Enriched with RentCast property details, market data, and AVM comparables for factual grounding.
+- **PATH_TO_YES_PROMPT** — Deal optimization suggestions. Returns target gaps and prioritized recommendations.
+- **MARKET_DISCOVERY_PROMPT** — Market discovery for budget/CoC targets with web search. Returns ranked markets.
+- **COMPS_STRENGTH_PROMPT** — Comp quality scoring. Returns similarity scores and confidence levels.
 
-| Component | Cost per Analysis |
-|-----------|------------------|
-| RentCast API (5-7 calls) | ~$0.10-0.20 |
-| Claude AI (1 analysis) | ~$0.02-0.05 |
-| Street View (fallback) | ~$0.007 |
-| **Total Variable Cost** | **~$0.13-0.26** |
+### Cost per Prompt
 
-### Pricing Strategy Rationale
-
-**Target Gross Margin:** 80%+
-
-| Tier | Revenue/User | Cost/User | Margin |
-|------|-------------|-----------|--------|
-| Free | $0 | $0.78 (3×$0.26) | -100% |
-| Pro | $29 | $6.50 (25×$0.26) | 78% |
-| Team | $79 | $26 (100×$0.26) | 67% |
-| Enterprise | $199 | ~$52 (200 avg) | 74% |
-
-### Monetization A/B Tests to Run
-
-1. **Freemium vs. Trial**
-   - Test: 3 free analyses vs. 7-day free trial
-   - Metric: Pro conversion rate
-
-2. **Annual Discount**
-   - Test: 20% vs. 25% annual discount
-   - Metric: LTV, churn rate
-
-3. **Pay-per-Analysis**
-   - Test: $3/analysis vs. subscription only
-   - Metric: Revenue per user, activation rate
+- Property Audit: ~$0.025
+- Underwrite Analysis: ~$0.05
+- Sensitivity Analysis: ~$0.02
+- Amenity ROI: ~$0.02
+- Regulation Scanner: ~$0.03
+- Lender Packet: ~$0.015
+- Path to Yes: ~$0.02
+- Market Discovery: ~$0.03
+- Comp Strength: ~$0.01
 
 ---
 
-## 9. Financial Plan - Charts & KPIs
+## 8. Caching, Rate Limiting & Performance
 
-### Revenue Projections (Year 1)
+### Server-Side Cache (In-Memory TTL)
 
-| Month | Free Users | Pro Users | Team | Enterprise | MRR |
-|-------|------------|-----------|------|------------|-----|
-| M1 | 50 | 5 | 0 | 0 | $145 |
-| M2 | 120 | 15 | 1 | 0 | $514 |
-| M3 | 250 | 35 | 2 | 0 | $1,173 |
-| M4 | 400 | 60 | 4 | 1 | $2,255 |
-| M5 | 600 | 100 | 6 | 1 | $3,613 |
-| M6 | 850 | 150 | 10 | 2 | $5,639 |
-| M7 | 1,100 | 220 | 15 | 3 | $8,167 |
-| M8 | 1,400 | 300 | 20 | 4 | $10,876 |
-| M9 | 1,750 | 400 | 28 | 5 | $14,407 |
-| M10 | 2,100 | 520 | 38 | 7 | $18,865 |
-| M11 | 2,500 | 660 | 50 | 9 | $24,431 |
-| M12 | 3,000 | 850 | 65 | 12 | $31,920 |
+- **Claude Cache**: 30 minute TTL, max 500 entries, LRU eviction
+- **RentCast Cache**: 60 minute TTL, max 500 entries, LRU eviction
+- Hit/miss counters tracked for admin dashboard
+- Cache clears on server restart (acceptable for MVP)
 
-**Year 1 ARR:** ~$383,000
+### Client-Side Cache (React Query)
 
-### Key Performance Indicators (KPIs)
+- **Garbage Collection**: 24 hours
+- **Stale Time**: 5 minutes (default), 30 minutes (per-hook override)
+- **Retry**: 3 attempts with exponential backoff
+- **Refetch on Mount**: false (prevents unnecessary API calls)
 
-#### Acquisition Metrics
-| KPI | Target | Formula |
-|-----|--------|---------|
-| CAC (Customer Acquisition Cost) | < $50 | Marketing Spend ÷ New Customers |
-| Trial-to-Paid Conversion | > 15% | Paid Users ÷ Trial Signups |
-| Activation Rate | > 40% | Users with 1+ analysis ÷ Signups |
+### Rate Limits (IP-Based)
 
-#### Engagement Metrics
-| KPI | Target | Formula |
-|-----|--------|---------|
-| DAU/MAU | > 25% | Daily Active ÷ Monthly Active |
-| Analyses per User (Pro) | > 8/mo | Total Analyses (Pro) ÷ Pro Users |
-| Portfolio Size | > 5 | Avg saved assessments per user |
+- **General API**: 30 requests per minute
+- **Claude Messages**: 10 requests per minute
+- **Full Analysis**: 3 requests per 10 minutes
 
-#### Revenue Metrics
-| KPI | Target | Formula |
-|-----|--------|---------|
-| MRR Growth Rate | > 20%/mo | (MRR_new - MRR_prev) ÷ MRR_prev |
-| ARPU (Pro) | $29 | Pro MRR ÷ Pro Users |
-| LTV:CAC Ratio | > 3:1 | Customer LTV ÷ CAC |
+### Performance Baseline
 
-#### Retention Metrics
-| KPI | Target | Formula |
-|-----|--------|---------|
-| Monthly Churn (Pro) | < 5% | Churned ÷ Start of Month Users |
-| Net Revenue Retention | > 100% | (MRR_end + Expansion) ÷ MRR_start |
-| 90-Day Retention | > 60% | Active at Day 90 ÷ Cohort Size |
-
-### Cost Projections (Monthly at Scale)
-
-| Category | M1 | M6 | M12 |
-|----------|-----|-----|------|
-| **API Costs** | $50 | $500 | $2,500 |
-| **Hosting (Vercel)** | $0 | $20 | $50 |
-| **Marketing** | $200 | $1,000 | $3,000 |
-| **Support** | $0 | $500 | $1,500 |
-| **Development** | $0 | $0 | $5,000 |
-| **Total** | $250 | $2,020 | $12,050 |
-
-### Break-Even Analysis
-
-**Monthly Fixed Costs (at M12):** ~$12,050  
-**Variable Cost per Paid User:** ~$6.50/mo  
-**Average Revenue per Paid User:** ~$35/mo  
-**Contribution Margin:** $28.50/user  
-
-**Break-Even Users:** 423 paid users ($12,050 ÷ $28.50)
+- **First property search**: 90-120 seconds (RentCast + web search + 5s delay + AI analysis)
+- **Repeat search (same session)**: Under 1 second (React Query client cache)
+- **Repeat search (different session)**: Under 100ms (server cache hit)
+- **RentCast calls per search**: 6 API calls
+- **Bundle size**: ~1,014 KB JS (gzipped: ~286 KB)
 
 ---
 
-## Appendix A: Quick Reference
+## 9. Security & Compliance
 
-### API Rate Limits
+### Current Security Model
 
-| API | Rate Limit | Recommended |
-|-----|-----------|-------------|
-| RentCast | 1,000/month (Free) | Starter $99/mo |
-| Anthropic | 4M tokens/min | Standard tier |
-| Google Maps | 28,000/month (Free) | Standard tier |
+- **API Keys**: Server-side only (Express proxy). No `VITE_` prefix for secrets.
+- **Security Headers**: Helmet middleware (HSTS, X-Frame-Options, etc.)
+- **CORS**: Configurable via `CORS_ORIGIN` env var. Defaults to localhost in dev.
+- **Rate Limiting**: IP-based via express-rate-limit
+- **Authentication**: Session scaffold (in-memory Map, IP fallback). Not production auth.
+- **Data Storage**: Browser localStorage (portfolio, settings). No server-side persistence.
+- **Input Validation**: Basic sanitization on API routes
 
 ### Environment Variables
 
-```bash
-VITE_ANTHROPIC_API_KEY=sk-ant-api03-...
-VITE_RENTCAST_API_KEY=eba8460...
-VITE_GOOGLE_MAPS_API_KEY=AIza...
+```
+# Server-side only (NEVER exposed to browser)
+ANTHROPIC_API_KEY=sk-ant-api03-...
+RENTCAST_API_KEY=your-key-here
+
+# CORS origins (comma-separated, defaults to localhost)
+CORS_ORIGIN=https://yourdomain.com
+
+# Client-side (optional)
+VITE_GOOGLE_MAPS_API_KEY=your-key-here
 ```
 
-### Key Commands
+### What Needs to Change for Production
+
+- Replace session scaffold with real auth (Supabase, Clerk, or Auth0)
+- Add Content Security Policy (currently disabled for Tailwind inline styles)
+- Add HTTPS enforcement (handled by hosting platform)
+- Add environment variable validation on startup
+- Consider Redis for cache persistence across deploys
+
+---
+
+## 10. Deployment Guide
+
+### Prerequisites
+
+- Node.js 18+ installed
+- GitHub repository connected: `https://github.com/gdemmanuel/AirROI.git`
+- API keys: `ANTHROPIC_API_KEY`, `RENTCAST_API_KEY`
+
+### How It Works in Production
+
+AirROI runs as a **single Express server** that:
+1. Serves the built frontend from `dist/` (static files)
+2. Proxies API requests to Claude and RentCast
+3. Handles auth, caching, rate limiting, and admin metrics
+4. Falls back to `index.html` for client-side routing (SPA)
+
+### Step-by-Step: Railway Deployment (Recommended)
+
+**Why Railway**: Always-on server ($5/mo), in-memory state persists, zero code changes needed, auto-deploy from GitHub.
+
+**Step 1: Add production start script to package.json**
+```json
+"start": "node --import tsx server/index.ts"
+```
+
+**Step 2: Create Railway account**
+1. Go to [railway.com](https://railway.com)
+2. Sign up with GitHub
+3. Click "New Project" then "Deploy from GitHub repo"
+4. Select `gdemmanuel/AirROI`
+
+**Step 3: Configure environment variables**
+In Railway Dashboard > Variables:
+- `ANTHROPIC_API_KEY` = your Anthropic key
+- `RENTCAST_API_KEY` = your RentCast key
+- `CORS_ORIGIN` = your domain (e.g., `https://airroi.up.railway.app`)
+- `NODE_ENV` = `production`
+- `API_PORT` = `3002` (or let Railway assign via `PORT`)
+
+**Step 4: Configure build**
+Railway auto-detects Node.js. Set:
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start`
+
+**Step 5: Deploy**
+Push to master — Railway auto-deploys. URL assigned automatically (e.g., `airroi.up.railway.app`).
+
+**Step 6: Custom domain (optional)**
+Railway Dashboard > Settings > Domains > Add custom domain.
+
+### Alternative Platforms
+
+**Render (Free or $7/mo)**
+- Free tier: sleeps after 15 min inactivity, 60s cold start wake
+- Paid tier: always-on, similar to Railway
+- Setup: Connect GitHub, set build/start commands, add env vars
+
+**Fly.io ($3-5/mo)**
+- Needs a Dockerfile
+- Docker-based, edge deployment
+- More setup work but cheapest always-on option
+
+**Vercel (NOT recommended for this app)**
+- Converts Express to serverless functions
+- In-memory caches, metrics, and sessions reset per invocation
+- Would require significant refactoring
+
+### Build & Run Commands
 
 ```bash
-# Development
-npm run dev
+# Development (both servers)
+npm run dev:full
 
 # Production build
 npm run build
 
-# Preview production
-npm run preview
+# Production start (serves API + frontend)
+npm start
 
-# Deploy to Vercel
-vercel deploy --prod
+# Individual processes
+npm run dev      # Vite dev server only
+npm run server   # Express server only
+```
+
+### Deployment Checklist
+
+- [ ] `npm run build` succeeds with no errors
+- [ ] All environment variables configured on hosting platform
+- [ ] `CORS_ORIGIN` set to production domain
+- [ ] `NODE_ENV=production` set
+- [ ] Health check passes: `GET /api/health`
+- [ ] Admin dashboard accessible: navigate to Admin tab
+- [ ] First property search completes successfully
+- [ ] Repeat search returns cached results (under 1s)
+
+---
+
+## 11. Data Model
+
+### Current: Browser localStorage
+
+- **`airroi_saved_assessments`** — Array of `SavedAssessment` objects
+- **`airroi_amenities`** — Custom amenity configurations
+
+### Core TypeScript Interfaces
+
+**PropertyConfig** — 25+ fields for financial modeling:
+- Purchase: price, downPaymentPercent, loanCosts
+- Financing: mortgageRate, helocRate, helocFundingPercent, helocPaydownPercent
+- Revenue: adr, occupancyPercent, mtrMonthlyRent, ltrMonthlyRent
+- Expenses: mgmtFeePercent, maintenancePercent, hostFeePercent, fixedOpexMonthly
+- Growth: annualAppreciationRate, annualRentGrowthRate, annualExpenseInflationRate
+
+**MarketInsight** — AI analysis output:
+- summary, snapshot, regulations, marketPerformance
+- proFormaScenarios (3 tiers), breakEvenAnalysis
+- recommendation, risks, sources
+- Suggested values: ADR, occupancy, MTR/LTR rent, listing price, furnishings, HOA
+
+**SavedAssessment** — Portfolio item:
+- id, address, config, insight, selectedAmenities, timestamp
+- strategy (STR/MTR/LTR), capRate, cashOnCash, price, annualNoi
+
+**RentCastProperty** — Expanded property data (Phase 5):
+- Core: beds, baths, sqft, lotSize, yearBuilt, propertyType
+- Phase 5: features, saleHistory, taxAssessments, owner, zoning
+- AVM: avmValueRange, avmComparables with correlation scores
+- Listing: listingDetails (DOM, type, agent, price history)
+
+### Future: Cloud Database (Supabase PostgreSQL)
+
+```
+users/
+  - id, email, displayName, subscription, createdAt
+
+assessments/
+  - id, userId, address, config, insight, strategy
+  - metrics (capRate, cashOnCash, annualNoi)
+  - createdAt, updatedAt
+
+settings/
+  - userId, defaultConfig, amenities
 ```
 
 ---
 
-**Document prepared for AirROI PRO Launch**  
-**Last Updated:** February 2026
+## 12. Pricing & Packaging
+
+### Pricing Tiers
+
+- **Free**: $0/mo — 3 analyses/month, basic features
+- **Pro**: $29/mo — 25 analyses/month, full features, PDF export, portfolio
+- **Team**: $79/mo — 100 analyses/month, 3 seats, shared portfolios
+- **Enterprise**: $199/mo — Unlimited, API access, white-label, priority support
+
+### Cost per Analysis
+
+- RentCast API (6 calls): ~$0.10-0.20
+- Claude AI (1 analysis): ~$0.02-0.05
+- Street View (fallback): ~$0.007
+- **Total variable cost**: ~$0.13-0.26
+
+### Margin Analysis
+
+- Free: -100% ($0 revenue, $0.78 cost for 3 analyses)
+- Pro: 78% ($29 revenue, $6.50 cost for 25 analyses)
+- Team: 67% ($79 revenue, $26 cost for 100 analyses)
+- Enterprise: 74% ($199 revenue, ~$52 cost for 200 avg analyses)
 
 ---
 
-## 10. Advanced AI Prompt Architecture
+## 13. Financial Plan & KPIs
 
-### Overview
+### Revenue Projections (Year 1)
 
-AirROI PRO uses a modular prompt library with 9 specialized AI prompts for comprehensive underwriting analysis. Each prompt is designed for a specific task and returns structured JSON for seamless UI integration.
+- Month 1: 50 free users, 5 pro → $145 MRR
+- Month 3: 250 free, 35 pro, 2 team → $1,173 MRR
+- Month 6: 850 free, 150 pro, 10 team, 2 enterprise → $5,639 MRR
+- Month 12: 3,000 free, 850 pro, 65 team, 12 enterprise → $31,920 MRR
+- **Year 1 ARR**: ~$383,000
 
-### Prompt Library Structure
+### Key Performance Indicators
 
-```
-prompts/
-└── underwriting.ts          # All prompts + TypeScript interfaces
-    ├── Types (15+ interfaces)
-    ├── AUDIT_PROMPT
-    ├── UNDERWRITE_PROMPT
-    ├── SENSITIVITY_PROMPT
-    ├── AMENITY_ROI_PROMPT
-    ├── REGULATION_SCANNER_PROMPT
-    ├── PACKET_SUMMARY_PROMPT
-    ├── PATH_TO_YES_PROMPT
-    ├── MARKET_DISCOVERY_PROMPT
-    └── COMPS_STRENGTH_PROMPT
-```
+**Acquisition:**
+- CAC (Customer Acquisition Cost): target under $50
+- Trial-to-Paid Conversion: target over 15%
+- Activation Rate (1+ analysis): target over 40%
 
-### Prompt Catalog
+**Engagement:**
+- DAU/MAU: target over 25%
+- Analyses per Pro User: target over 8/month
+- Portfolio Size: target over 5 saved assessments
 
-| Prompt | Purpose | Web Search | Avg Tokens |
-|--------|---------|------------|------------|
-| `AUDIT_PROMPT` | Property & market verification | ✅ | ~2,000 |
-| `UNDERWRITE_PROMPT` | Full KPI calculation with HELOC | ❌ | ~4,000 |
-| `SENSITIVITY_PROMPT` | ADR/Occupancy/Rate stress testing | ❌ | ~1,500 |
-| `AMENITY_ROI_PROMPT` | Amenity payback with diminishing returns | ❌ | ~1,500 |
-| `REGULATION_SCANNER_PROMPT` | STR regulation lookup | ✅ | ~2,500 |
-| `PACKET_SUMMARY_PROMPT` | Lender-ready one-pager | ❌ | ~1,500 |
-| `PATH_TO_YES_PROMPT` | Deal optimization suggestions | ❌ | ~1,500 |
-| `MARKET_DISCOVERY_PROMPT` | Market discovery for budget/CoC | ✅ | ~2,500 |
-| `COMPS_STRENGTH_PROMPT` | Comp quality scoring | ❌ | ~1,000 |
+**Revenue:**
+- MRR Growth Rate: target over 20%/month
+- ARPU (Pro): $29
+- LTV:CAC Ratio: target over 3:1
 
-### Input/Output Schemas
+**Retention:**
+- Monthly Churn (Pro): target under 5%
+- Net Revenue Retention: target over 100%
+- 90-Day Retention: target over 60%
 
-#### Property Audit
+### Break-Even Analysis
 
-**Input:**
-```typescript
-interface PropertyFacts {
-  beds?: number;
-  baths?: number;
-  sqft?: number;
-  taxes?: number;
-  hoa?: number;
-}
-```
-
-**Output:**
-```typescript
-interface PropertyAudit {
-  address: string;
-  facts: PropertyFacts & { notes?: string };
-  market: {
-    regNotes?: string;
-    mtrNodes?: string[];
-    seasonalNotes?: string;
-  };
-  suggestions: {
-    adr?: number;
-    occ?: number;
-    mtrRent?: number;
-    ltrRent?: number;
-  };
-  risks: string[];
-  sources: { title: string; url: string }[];
-}
-```
-
-#### Sensitivity Analysis
-
-**Input:**
-```typescript
-{
-  adr: number;
-  occupancy: number;
-  rate: number;
-  ownerSurplus: number;
-  cashOnCash: number;
-  dscr: number;
-}
-```
-
-**Output:**
-```typescript
-interface SensitivityMatrix {
-  adrVariations: number[];      // [-10, -5, 0, 5, 10]
-  occVariations: number[];      // [-10, -5, 0, 5, 10]
-  rateVariations: number[];     // [-100, -50, 0, 50, 100] bps
-  matrix: {
-    adrDelta: number;
-    occDelta: number;
-    ownerSurplus: number;
-    cashOnCash: number;
-    dscr: number;
-  }[];
-  breakpoints: { description: string; threshold: string }[];
-  guidance: string;
-}
-```
-
-#### Path to Yes
-
-**Input:**
-```typescript
-{
-  kpis: { capRate: number; cashOnCash: number; dscr: number; ownerSurplus: number };
-  targets: { minCapRate: number; minCoC: number; minDSCR: number };
-  assumptions: Record<string, any>;
-}
-```
-
-**Output:**
-```typescript
-interface PathToYes {
-  currentStatus: 'Buy' | 'No-Buy';
-  targetGap: { metric: string; current: number; target: number; gap: number }[];
-  recommendations: {
-    priority: number;
-    action: string;
-    quantifiedImpact: string;
-    implementationNotes: string;
-  }[];
-  minimalChanges: string[];
-}
-```
-
-### Service Integration
-
-All prompts are integrated via `claudeService.ts`:
-
-```typescript
-import { 
-  runPropertyAudit,
-  runUnderwriteAnalysis,
-  runSensitivityAnalysis,
-  runAmenityROI,
-  scanRegulations,
-  generateLenderPacket,
-  calculatePathToYes,
-  discoverMarkets,
-  scoreCompStrength
-} from './services/claudeService';
-
-// Example usage
-const sensitivity = await runSensitivityAnalysis({
-  adr: 300,
-  occupancy: 70,
-  rate: 6.5,
-  ownerSurplus: 24000,
-  cashOnCash: 12.5,
-  dscr: 1.35
-});
-```
-
-### UI Components
-
-| Component | File | Features |
-|-----------|------|----------|
-| `SensitivityTable` | `components/SensitivityTable.tsx` | 5×5 ADR×Occupancy matrix, color-coded cells, breakpoints |
-| `AmenityROIPanel` | `components/AmenityROIPanel.tsx` | Ranked list, payback bars, confidence ranges |
-| `PathToYesPanel` | `components/PathToYesPanel.tsx` | Target gaps, prioritized actions, "Apply" buttons |
-| `LenderPacketExport` | `components/LenderPacketExport.tsx` | Preview card, PDF export |
-
-### API Cost Estimates
-
-| Prompt | Input Tokens | Output Tokens | Cost/Call |
-|--------|-------------|---------------|-----------|
-| Property Audit | ~500 | ~1,500 | ~$0.025 |
-| Underwrite Analysis | ~1,000 | ~3,000 | ~$0.05 |
-| Sensitivity Analysis | ~300 | ~1,200 | ~$0.02 |
-| Amenity ROI | ~400 | ~1,100 | ~$0.02 |
-| Regulation Scanner | ~200 | ~2,000 | ~$0.03 |
-| Lender Packet | ~800 | ~700 | ~$0.015 |
-| Path to Yes | ~500 | ~1,000 | ~$0.02 |
-| Market Discovery | ~200 | ~2,000 | ~$0.03 |
-| Comp Strength | ~600 | ~400 | ~$0.01 |
-
-**Average total per full analysis:** ~$0.20-0.25
-
-### Best Practices
-
-1. **Cache Expensive Calls** - Cache regulation scans and market discovery results for 24 hours
-2. **Batch Requests** - Combine multiple prompts in a single analysis workflow
-3. **Progressive Loading** - Show results as each prompt completes
-4. **Error Handling** - Each function throws on failure; wrap in try-catch with fallback UI
+- Monthly Fixed Costs (at M12): ~$12,050
+- Variable Cost per Paid User: ~$6.50/mo
+- Average Revenue per Paid User: ~$35/mo
+- Contribution Margin: $28.50/user
+- **Break-Even: 423 paid users**
 
 ---
 
-**Document prepared for AirROI PRO Launch**  
-**Last Updated:** February 2026
+## 14. Roadmap & Future Phases
 
+### Completed Phases
+
+1. **Core MVP** — STR/MTR/LTR underwriting, 20-year projections, AI recommendations
+2. **Tailwind v4 Migration** — PostCSS plugin architecture
+3. **React Query Integration** — Client-side caching (24h gc, 5m stale)
+4. **Error Handling** — Error boundaries, toast system, progress indicator
+5. **UI Polish** — Horizontal nav, dashboard reorder, spacing optimization
+6. **App.tsx Decomposition** — 1774 to 951 lines, 10+ extracted components
+7. **Backend Proxy** — Express API server, keys server-side, rate limiting, TTL cache
+8. **Pre-Production Hardening** — Helmet, CORS, API key leak fixes, dead code removal
+9. **RentCast Data Expansion** — 6 tiers of data: AVM, features, history, comps, trends, listings
+10. **Dashboard Reorganization** — RentCast Data tab, compact layout, professional styling
+11. **Admin Dashboard** — Server metrics, API usage, model tracking, cache management, charts
+
+### Next Phases
+
+**Phase 12: Production Deployment**
+- Add `start` script to package.json
+- Deploy to Railway (or Render/Fly.io)
+- Configure environment variables and custom domain
+- Verify health check and first search
+
+**Phase 13: Real Authentication (Supabase)**
+- Replace session scaffold with Supabase Auth
+- Login/signup UI with email/password and Google SSO
+- Per-user rate limits with session tokens
+- PostgreSQL for persistent portfolios and settings
+
+**Phase 14: Map Integration**
+- Google Maps API key already in .env
+- Show property + AVM comps + rental listings on interactive map
+- Use latitude/longitude from RentCast data
+- Click-to-zoom comp details
+
+**Phase 15: Performance Optimization**
+- Code splitting with `manualChunks` (vendor, react-query, recharts)
+- Lazy-load heavy components (Charts, FinancialTables, MarketTrendCharts)
+- `React.memo` and `useCallback` for render optimization
+- Reduce/remove 5s pre-analysis delay if rate limiting is stable
+
+**Phase 16: Payments (Stripe)**
+- Stripe integration for subscription billing
+- Free/Pro/Team/Enterprise tier enforcement
+- Usage tracking and overage handling
+- Billing portal and invoice management
+
+**Phase 17: Testing & CI/CD**
+- Unit tests (Vitest) for financial logic and services
+- E2E tests (Playwright) for critical user flows
+- GitHub Actions pipeline for build/test/deploy
+- Automated deployment on push to master
+
+---
+
+## Important Rules (Preserve These)
+
+1. **Never remove `pt-24` from main element** — preserves nav spacing
+2. **Keep `normalizeAddress` identical** — changes break cache keys
+3. **Keep `refetchOnMount: false`** — global default prevents cache thrashing
+4. **API keys must stay server-side** — never use `VITE_` prefix for secrets
+5. **Server must run before frontend** — Vite proxies `/api` to `:3002`
+6. **Express 5 in use** — no bare `*` wildcard routes, use `/{*splat}` syntax
+7. **Side effects in `useEffect`, never `useMemo`** — recently fixed, don't regress
+8. **RentCast proxy is transparent** — new endpoints work automatically via `/api/rentcast/*`
+9. **Phase 5+ data is all optional** — every new field on `RentCastProperty` is `?`, UI guards with `&&` checks
+10. **In-memory state resets on restart** — caches, metrics, sessions all rebuild from scratch
+
+---
+
+**Document prepared for AirROI PRO Launch**
+**Last Updated:** February 12, 2026
+**Version:** 2.0

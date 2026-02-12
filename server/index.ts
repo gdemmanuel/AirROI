@@ -118,6 +118,42 @@ app.post('/api/admin/budget', (req, res) => {
   res.json({ success: true, budget });
 });
 
+app.get('/api/admin/pricing', (_req, res) => {
+  res.json(costTracker.getPricingInfo());
+});
+
+app.post('/api/admin/rentcast-cost', (req, res) => {
+  const { costPerRequest } = req.body;
+  if (typeof costPerRequest !== 'number' || costPerRequest < 0) {
+    return res.status(400).json({ error: 'Invalid cost per request value' });
+  }
+  costTracker.setRentCastCostPerRequest(costPerRequest);
+  res.json({ success: true, costPerRequest });
+});
+
+app.get('/api/admin/rate-limits', (_req, res) => {
+  res.json({ limits: TIER_LIMITS });
+});
+
+app.post('/api/admin/rate-limits', (req, res) => {
+  const { tier, analysesPerDay, claudeCallsPerHour } = req.body;
+  
+  if (!tier || !['free', 'pro'].includes(tier)) {
+    return res.status(400).json({ error: 'Invalid tier. Must be "free" or "pro"' });
+  }
+  
+  if (typeof analysesPerDay !== 'number' || analysesPerDay < 1) {
+    return res.status(400).json({ error: 'Invalid analysesPerDay value' });
+  }
+  
+  if (typeof claudeCallsPerHour !== 'number' || claudeCallsPerHour < 1) {
+    return res.status(400).json({ error: 'Invalid claudeCallsPerHour value' });
+  }
+  
+  (TIER_LIMITS as any)[tier] = { analysesPerDay, claudeCallsPerHour };
+  res.json({ success: true, limits: TIER_LIMITS });
+});
+
 app.get('/api/queue/status', (req, res) => {
   const userId = (req as any).userId || 'anonymous';
   const position = claudeQueue.getPosition(userId);
@@ -199,7 +235,7 @@ app.post('/api/claude/messages', claudeLimiter, async (req, res) => {
       // Track cost
       const inputTokens = response.usage?.input_tokens || 0;
       const outputTokens = response.usage?.output_tokens || 0;
-      const cost = costTracker.record(model, inputTokens, outputTokens, '/api/claude/messages', userId);
+      const cost = costTracker.recordClaude(model, inputTokens, outputTokens, '/api/claude/messages', userId);
       
       if (isDev) console.log(`[CostTracker] Request cost: $${cost.toFixed(4)} (${inputTokens} in, ${outputTokens} out)`);
       
@@ -290,7 +326,7 @@ app.post('/api/claude/analysis', analysisLimiter, async (req, res) => {
       // Track cost
       const inputTokens = response.usage?.input_tokens || 0;
       const outputTokens = response.usage?.output_tokens || 0;
-      const cost = costTracker.record(model, inputTokens, outputTokens, '/api/claude/analysis', userId);
+      const cost = costTracker.recordClaude(model, inputTokens, outputTokens, '/api/claude/analysis', userId);
       
       if (isDev) console.log(`[CostTracker] Analysis cost: $${cost.toFixed(4)} (${inputTokens} in, ${outputTokens} out)`);
       
@@ -364,6 +400,11 @@ app.use('/api/rentcast', async (req, res) => {
     }
 
     const data = await response.json();
+
+    // Track RentCast API cost
+    const userId = (req as any).userId || 'anonymous';
+    const cost = costTracker.recordRentCast(req.url, userId);
+    if (isDev) console.log(`[CostTracker] RentCast request cost: $${cost.toFixed(4)}`);
 
     // Cache successful responses for 60 minutes
     rentcastCache.set(cacheKey, data);

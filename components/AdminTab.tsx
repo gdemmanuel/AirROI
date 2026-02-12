@@ -121,6 +121,17 @@ const AdminTab: React.FC = () => {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [clearing, setClearing] = useState<string | null>(null);
   const [costData, setCostData] = useState<any>(null);
+  const [pricingInfo, setPricingInfo] = useState<any>(null);
+  const [rateLimits, setRateLimits] = useState<any>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configForm, setConfigForm] = useState({
+    dailyBudget: 50,
+    rentcastCost: 0.03,
+    freeTierAnalyses: 3,
+    freeTierCalls: 15,
+    proTierAnalyses: 50,
+    proTierCalls: 100,
+  });
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -149,15 +160,49 @@ const AdminTab: React.FC = () => {
     }
   }, []);
 
+  const fetchPricing = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/pricing');
+      if (res.ok) {
+        const data = await res.json();
+        setPricingInfo(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch pricing info:', e);
+    }
+  }, []);
+
+  const fetchRateLimits = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/rate-limits');
+      if (res.ok) {
+        const data = await res.json();
+        setRateLimits(data.limits);
+        // Initialize form with current values
+        setConfigForm(prev => ({
+          ...prev,
+          freeTierAnalyses: data.limits.free.analysesPerDay,
+          freeTierCalls: data.limits.free.claudeCallsPerHour,
+          proTierAnalyses: data.limits.pro.analysesPerDay,
+          proTierCalls: data.limits.pro.claudeCallsPerHour,
+        }));
+      }
+    } catch (e) {
+      console.error('Failed to fetch rate limits:', e);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMetrics();
     fetchCosts();
+    fetchPricing();
+    fetchRateLimits();
     const interval = setInterval(() => {
       fetchMetrics();
       fetchCosts();
     }, 30000);
     return () => clearInterval(interval);
-  }, [fetchMetrics, fetchCosts]);
+  }, [fetchMetrics, fetchCosts, fetchPricing, fetchRateLimits]);
 
   const handleClearCache = async (target: 'claude' | 'rentcast' | 'all') => {
     setClearing(target);
@@ -172,6 +217,54 @@ const AdminTab: React.FC = () => {
       console.error('Failed to clear cache:', e);
     } finally {
       setClearing(null);
+    }
+  };
+
+  const handleSaveConfig = async () => {
+    try {
+      // Update daily budget
+      await fetch('/api/admin/budget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ budget: configForm.dailyBudget }),
+      });
+
+      // Update RentCast cost
+      await fetch('/api/admin/rentcast-cost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ costPerRequest: configForm.rentcastCost }),
+      });
+
+      // Update free tier limits
+      await fetch('/api/admin/rate-limits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: 'free',
+          analysesPerDay: configForm.freeTierAnalyses,
+          claudeCallsPerHour: configForm.freeTierCalls,
+        }),
+      });
+
+      // Update pro tier limits
+      await fetch('/api/admin/rate-limits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: 'pro',
+          analysesPerDay: configForm.proTierAnalyses,
+          claudeCallsPerHour: configForm.proTierCalls,
+        }),
+      });
+
+      // Refresh data
+      await fetchCosts();
+      await fetchRateLimits();
+      setShowConfigModal(false);
+    } catch (e) {
+      console.error('Failed to save config:', e);
+      alert('Failed to save configuration');
     }
   };
 
@@ -222,12 +315,20 @@ const AdminTab: React.FC = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={fetchMetrics}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
-        >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowConfigModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-900 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-colors"
+          >
+            <HardDrive size={14} /> Configure
+          </button>
+          <button
+            onClick={fetchMetrics}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* ================================================================== */}
@@ -497,19 +598,27 @@ const AdminTab: React.FC = () => {
           </div>
           <div className="p-5 space-y-4">
             {/* Budget Overview */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg">
-                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Today's Cost</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Today's Total</div>
                 <div className="text-2xl font-black text-slate-900">${costData.today.totalCost.toFixed(2)}</div>
+                <div className="text-[10px] text-slate-500 mt-1">{costData.today.totalCalls} calls</div>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="text-xs text-blue-600 uppercase tracking-wider font-black mb-1">Claude API</div>
+                <div className="text-2xl font-black text-blue-900">${costData.today.claudeCost.toFixed(2)}</div>
+                <div className="text-[10px] text-blue-600 mt-1">{costData.today.claudeCalls} calls</div>
+              </div>
+              <div className="bg-emerald-50 p-4 rounded-lg">
+                <div className="text-xs text-emerald-600 uppercase tracking-wider font-black mb-1">RentCast API</div>
+                <div className="text-2xl font-black text-emerald-900">${costData.today.rentcastCost.toFixed(2)}</div>
+                <div className="text-[10px] text-emerald-600 mt-1">{costData.today.rentcastCalls} calls</div>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
                 <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Daily Budget</div>
                 <div className="text-2xl font-black text-slate-900">${costData.dailyBudget.toFixed(2)}</div>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Remaining</div>
-                <div className={`text-2xl font-black ${costData.remaining > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  ${costData.remaining.toFixed(2)}
+                <div className={`text-[10px] mt-1 ${costData.remaining > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  ${costData.remaining.toFixed(2)} left
                 </div>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
@@ -521,6 +630,7 @@ const AdminTab: React.FC = () => {
                 }`}>
                   {costData.budgetPercent.toFixed(1)}%
                 </div>
+                <div className="text-[10px] text-slate-500 mt-1">of budget</div>
               </div>
             </div>
 
@@ -528,7 +638,9 @@ const AdminTab: React.FC = () => {
             <div>
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-2">
                 <span className="text-slate-600">Budget Progress</span>
-                <span className="text-slate-500">{costData.today.totalCalls} API calls today</span>
+                <span className="text-slate-500">
+                  Claude: ${costData.today.claudeCost.toFixed(2)} • RentCast: ${costData.today.rentcastCost.toFixed(2)}
+                </span>
               </div>
               <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
                 <div 
@@ -542,26 +654,50 @@ const AdminTab: React.FC = () => {
               </div>
             </div>
 
-            {/* Cost by Model */}
-            {Object.keys(costData.today.byModel).length > 0 && (
-              <div>
-                <div className="text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Cost by Model</div>
-                <div className="space-y-2">
-                  {Object.entries(costData.today.byModel).map(([model, data]: [string, any]) => (
-                    <div key={model} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Cpu size={14} className="text-slate-400" />
-                        <div>
-                          <div className="text-xs font-black text-slate-900">{model}</div>
-                          <div className="text-[10px] text-slate-500">{data.calls} calls • {data.inputTokens.toLocaleString()} in / {data.outputTokens.toLocaleString()} out tokens</div>
+            {/* API Breakdown */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Claude Cost by Model */}
+              {Object.keys(costData.today.byModel).length > 0 && (
+                <div>
+                  <div className="text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Claude by Model</div>
+                  <div className="space-y-2">
+                    {Object.entries(costData.today.byModel).map(([model, data]: [string, any]) => (
+                      <div key={model} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Cpu size={14} className="text-blue-400" />
+                          <div>
+                            <div className="text-xs font-black text-blue-900">{model}</div>
+                            <div className="text-[10px] text-blue-600">{data.calls} calls • {data.inputTokens.toLocaleString()} in / {data.outputTokens.toLocaleString()} out</div>
+                          </div>
                         </div>
+                        <div className="text-sm font-black text-blue-900">${data.cost.toFixed(3)}</div>
                       </div>
-                      <div className="text-sm font-black text-slate-900">${data.cost.toFixed(3)}</div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* RentCast Cost by Endpoint */}
+              {Object.keys(costData.today.byRentCastEndpoint).length > 0 && (
+                <div>
+                  <div className="text-xs font-black uppercase tracking-wider text-slate-600 mb-2">RentCast by Endpoint</div>
+                  <div className="space-y-2">
+                    {Object.entries(costData.today.byRentCastEndpoint).map(([endpoint, data]: [string, any]) => (
+                      <div key={endpoint} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Database size={14} className="text-emerald-400" />
+                          <div>
+                            <div className="text-xs font-black text-emerald-900">{endpoint.substring(0, 30)}{endpoint.length > 30 ? '...' : ''}</div>
+                            <div className="text-[10px] text-emerald-600">{data.calls} calls</div>
+                          </div>
+                        </div>
+                        <div className="text-sm font-black text-emerald-900">${data.cost.toFixed(3)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -824,6 +960,155 @@ const AdminTab: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Configuration Modal */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Admin Configuration</h3>
+                  <p className="text-xs text-slate-500 mt-1">Configure API costs, budgets, and rate limits</p>
+                </div>
+                <button
+                  onClick={() => setShowConfigModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <XCircle size={20} className="text-slate-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Budget Settings */}
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3">Budget Settings</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-black text-slate-600 mb-1">Daily Budget (USD)</label>
+                    <input
+                      type="number"
+                      value={configForm.dailyBudget}
+                      onChange={(e) => setConfigForm({ ...configForm, dailyBudget: parseFloat(e.target.value) })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-black"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* RentCast Pricing */}
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3">RentCast Pricing</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-black text-slate-600 mb-1">Cost Per Request (USD)</label>
+                    <input
+                      type="number"
+                      value={configForm.rentcastCost}
+                      onChange={(e) => setConfigForm({ ...configForm, rentcastCost: parseFloat(e.target.value) })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-black"
+                      step="0.001"
+                      min="0"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Developer: $0.20 • Foundation: $0.06 • Growth: $0.03 • Scale: $0.015
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Claude Pricing (Info Only) */}
+              {pricingInfo && (
+                <div>
+                  <h4 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3">Claude API Pricing (Read-Only)</h4>
+                  <div className="space-y-2 bg-slate-50 p-4 rounded-lg">
+                    {Object.entries(pricingInfo.claude).map(([model, pricing]: [string, any]) => (
+                      <div key={model} className="flex items-center justify-between text-xs">
+                        <span className="font-black text-slate-900">{model}</span>
+                        <span className="text-slate-600">
+                          ${pricing.inputPerMToken}/M in • ${pricing.outputPerMToken}/M out
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rate Limits - Free Tier */}
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3">Free Tier Limits</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-black text-slate-600 mb-1">Analyses Per Day</label>
+                    <input
+                      type="number"
+                      value={configForm.freeTierAnalyses}
+                      onChange={(e) => setConfigForm({ ...configForm, freeTierAnalyses: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-black"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-600 mb-1">Claude Calls Per Hour</label>
+                    <input
+                      type="number"
+                      value={configForm.freeTierCalls}
+                      onChange={(e) => setConfigForm({ ...configForm, freeTierCalls: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-black"
+                      min="1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Rate Limits - Pro Tier */}
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3">Pro Tier Limits</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-black text-slate-600 mb-1">Analyses Per Day</label>
+                    <input
+                      type="number"
+                      value={configForm.proTierAnalyses}
+                      onChange={(e) => setConfigForm({ ...configForm, proTierAnalyses: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-black"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-600 mb-1">Claude Calls Per Hour</label>
+                    <input
+                      type="number"
+                      value={configForm.proTierCalls}
+                      onChange={(e) => setConfigForm({ ...configForm, proTierCalls: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-black"
+                      min="1"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-black uppercase transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveConfig}
+                className="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-black uppercase hover:bg-slate-800 transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

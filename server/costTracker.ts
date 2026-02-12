@@ -1,15 +1,16 @@
 /**
  * Real-time API Cost Tracker
  * 
- * Monitors Claude API usage and costs with:
- * - Per-model token usage tracking
- * - Real-time cost calculation based on Anthropic pricing
+ * Monitors Claude and RentCast API usage and costs with:
+ * - Per-model token usage tracking (Claude)
+ * - Per-endpoint request tracking (RentCast)
+ * - Real-time cost calculation based on API pricing
  * - Daily budget alerts
  * - Auto-throttling when approaching limits
  */
 
 // Anthropic API pricing (as of Feb 2026)
-const MODEL_PRICING = {
+const CLAUDE_PRICING = {
   'claude-sonnet-4': {
     inputPerMToken: 15.0,   // $15 per 1M input tokens
     outputPerMToken: 75.0,  // $75 per 1M output tokens
@@ -20,7 +21,11 @@ const MODEL_PRICING = {
   },
 } as const;
 
-interface UsageEntry {
+// RentCast API pricing (based on typical Growth plan: $0.03 per request)
+// User should configure based on their actual plan
+let RENTCAST_COST_PER_REQUEST = 0.03; // Default: Growth plan pricing
+
+interface ClaudeUsageEntry {
   model: string;
   inputTokens: number;
   outputTokens: number;
@@ -30,15 +35,28 @@ interface UsageEntry {
   userId: string;
 }
 
+interface RentCastUsageEntry {
+  endpoint: string;
+  cost: number;
+  timestamp: number;
+  userId: string;
+}
+
 interface DailyCosts {
   date: string;
   totalCost: number;
+  claudeCost: number;
+  rentcastCost: number;
   totalCalls: number;
+  claudeCalls: number;
+  rentcastCalls: number;
   byModel: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }>;
+  byRentCastEndpoint: Record<string, { calls: number; cost: number }>;
 }
 
 export class CostTracker {
-  private usageLog: UsageEntry[] = [];
+  private claudeUsageLog: ClaudeUsageEntry[] = [];
+  private rentcastUsageLog: RentCastUsageEntry[] = [];
   private dailyBudget: number;
   private alertThreshold: number;
   private hasAlertedToday = false;
@@ -56,22 +74,23 @@ export class CostTracker {
         this.hasAlertedToday = false;
         // Keep last 7 days of logs
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        this.usageLog = this.usageLog.filter(entry => entry.timestamp > sevenDaysAgo);
+        this.claudeUsageLog = this.claudeUsageLog.filter(entry => entry.timestamp > sevenDaysAgo);
+        this.rentcastUsageLog = this.rentcastUsageLog.filter(entry => entry.timestamp > sevenDaysAgo);
       }
     }, 60 * 1000); // Check every minute
   }
 
   /**
-   * Record API usage and calculate cost
+   * Record Claude API usage and calculate cost
    */
-  record(
+  recordClaude(
     model: string,
     inputTokens: number,
     outputTokens: number,
     endpoint: string,
     userId: string
   ): number {
-    const pricing = MODEL_PRICING[model as keyof typeof MODEL_PRICING];
+    const pricing = CLAUDE_PRICING[model as keyof typeof CLAUDE_PRICING];
     if (!pricing) {
       console.warn(`[CostTracker] Unknown model: ${model}`);
       return 0;
@@ -81,7 +100,7 @@ export class CostTracker {
     const outputCost = (outputTokens / 1_000_000) * pricing.outputPerMToken;
     const totalCost = inputCost + outputCost;
 
-    this.usageLog.push({
+    this.claudeUsageLog.push({
       model,
       inputTokens,
       outputTokens,
@@ -91,7 +110,31 @@ export class CostTracker {
       userId,
     });
 
-    // Check if we should alert
+    this.checkBudgetAlert();
+    return totalCost;
+  }
+
+  /**
+   * Record RentCast API usage and calculate cost
+   */
+  recordRentCast(endpoint: string, userId: string): number {
+    const cost = RENTCAST_COST_PER_REQUEST;
+
+    this.rentcastUsageLog.push({
+      endpoint,
+      cost,
+      timestamp: Date.now(),
+      userId,
+    });
+
+    this.checkBudgetAlert();
+    return cost;
+  }
+
+  /**
+   * Check budget and alert if threshold exceeded
+   */
+  private checkBudgetAlert() {
     const todayCost = this.getTodayCosts().totalCost;
     const budgetPercent = (todayCost / this.dailyBudget) * 100;
 
@@ -101,8 +144,6 @@ export class CostTracker {
         `🚨 [CostTracker] ALERT: ${budgetPercent.toFixed(1)}% of daily budget consumed ($${todayCost.toFixed(2)}/$${this.dailyBudget})`
       );
     }
-
-    return totalCost;
   }
 
   /**
@@ -110,14 +151,20 @@ export class CostTracker {
    */
   getTodayCosts(): DailyCosts {
     const today = new Date().toDateString();
-    const todayEntries = this.usageLog.filter(
+    const todayClaudeEntries = this.claudeUsageLog.filter(
+      entry => new Date(entry.timestamp).toDateString() === today
+    );
+    const todayRentCastEntries = this.rentcastUsageLog.filter(
       entry => new Date(entry.timestamp).toDateString() === today
     );
 
     const byModel: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }> = {};
-    let totalCost = 0;
+    const byRentCastEndpoint: Record<string, { calls: number; cost: number }> = {};
+    
+    let claudeCost = 0;
+    let rentcastCost = 0;
 
-    for (const entry of todayEntries) {
+    for (const entry of todayClaudeEntries) {
       if (!byModel[entry.model]) {
         byModel[entry.model] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 };
       }
@@ -125,14 +172,28 @@ export class CostTracker {
       byModel[entry.model].cost += entry.cost;
       byModel[entry.model].inputTokens += entry.inputTokens;
       byModel[entry.model].outputTokens += entry.outputTokens;
-      totalCost += entry.cost;
+      claudeCost += entry.cost;
+    }
+
+    for (const entry of todayRentCastEntries) {
+      if (!byRentCastEndpoint[entry.endpoint]) {
+        byRentCastEndpoint[entry.endpoint] = { calls: 0, cost: 0 };
+      }
+      byRentCastEndpoint[entry.endpoint].calls += 1;
+      byRentCastEndpoint[entry.endpoint].cost += entry.cost;
+      rentcastCost += entry.cost;
     }
 
     return {
       date: today,
-      totalCost,
-      totalCalls: todayEntries.length,
+      totalCost: claudeCost + rentcastCost,
+      claudeCost,
+      rentcastCost,
+      totalCalls: todayClaudeEntries.length + todayRentCastEntries.length,
+      claudeCalls: todayClaudeEntries.length,
+      rentcastCalls: todayRentCastEntries.length,
       byModel,
+      byRentCastEndpoint,
     };
   }
 
@@ -160,15 +221,20 @@ export class CostTracker {
   getHistory(): DailyCosts[] {
     const days: Record<string, DailyCosts> = {};
 
-    for (const entry of this.usageLog) {
+    for (const entry of this.claudeUsageLog) {
       const date = new Date(entry.timestamp).toDateString();
       
       if (!days[date]) {
         days[date] = {
           date,
           totalCost: 0,
+          claudeCost: 0,
+          rentcastCost: 0,
           totalCalls: 0,
+          claudeCalls: 0,
+          rentcastCalls: 0,
           byModel: {},
+          byRentCastEndpoint: {},
         };
       }
 
@@ -181,12 +247,75 @@ export class CostTracker {
       days[date].byModel[entry.model].inputTokens += entry.inputTokens;
       days[date].byModel[entry.model].outputTokens += entry.outputTokens;
       days[date].totalCost += entry.cost;
+      days[date].claudeCost += entry.cost;
       days[date].totalCalls += 1;
+      days[date].claudeCalls += 1;
+    }
+
+    for (const entry of this.rentcastUsageLog) {
+      const date = new Date(entry.timestamp).toDateString();
+      
+      if (!days[date]) {
+        days[date] = {
+          date,
+          totalCost: 0,
+          claudeCost: 0,
+          rentcastCost: 0,
+          totalCalls: 0,
+          claudeCalls: 0,
+          rentcastCalls: 0,
+          byModel: {},
+          byRentCastEndpoint: {},
+        };
+      }
+
+      if (!days[date].byRentCastEndpoint[entry.endpoint]) {
+        days[date].byRentCastEndpoint[entry.endpoint] = { calls: 0, cost: 0 };
+      }
+
+      days[date].byRentCastEndpoint[entry.endpoint].calls += 1;
+      days[date].byRentCastEndpoint[entry.endpoint].cost += entry.cost;
+      days[date].totalCost += entry.cost;
+      days[date].rentcastCost += entry.cost;
+      days[date].totalCalls += 1;
+      days[date].rentcastCalls += 1;
     }
 
     return Object.values(days).sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
     );
+  }
+
+  /**
+   * Set RentCast cost per request (based on user's plan)
+   */
+  setRentCastCostPerRequest(cost: number) {
+    RENTCAST_COST_PER_REQUEST = cost;
+  }
+
+  /**
+   * Get RentCast cost per request
+   */
+  getRentCastCostPerRequest(): number {
+    return RENTCAST_COST_PER_REQUEST;
+  }
+
+  /**
+   * Get pricing information for display
+   */
+  getPricingInfo() {
+    return {
+      claude: CLAUDE_PRICING,
+      rentcast: {
+        costPerRequest: RENTCAST_COST_PER_REQUEST,
+        plans: {
+          developer: { monthly: 0, included: 50, overage: 0.20 },
+          foundation: { monthly: 74, included: 1000, overage: 0.06 },
+          growth: { monthly: 199, included: 5000, overage: 0.03 },
+          scale: { monthly: 449, included: 25000, overage: 0.015 },
+        }
+      }
+    };
   }
 
   /**

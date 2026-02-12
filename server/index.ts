@@ -7,8 +7,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
 import { claudeCache, rentcastCache } from './cache.js';
-import { authMiddleware, createSession, startSessionCleanup, TIER_LIMITS } from './auth.js';
+import { authMiddleware, createSession, startSessionCleanup, TIER_LIMITS, checkUsageLimits, incrementUsage } from './auth.js';
 import { metricsMiddleware, metricsStore } from './metrics.js';
+import { claudeQueue } from './claudeQueue.js';
+import { costTracker } from './costTracker.js';
 
 // Load environment variables from .env
 dotenv.config();
@@ -97,6 +99,39 @@ app.get('/api/admin/metrics', (_req, res) => {
   res.json(metricsStore.getSnapshot());
 });
 
+app.get('/api/admin/queue', (_req, res) => {
+  console.log('[Server] Queue stats requested');
+  res.json(claudeQueue.getStats());
+});
+
+app.get('/api/admin/costs', (_req, res) => {
+  console.log('[Server] Cost stats requested');
+  res.json(costTracker.getSummary());
+});
+
+app.post('/api/admin/budget', (req, res) => {
+  const { budget } = req.body;
+  if (typeof budget !== 'number' || budget <= 0) {
+    return res.status(400).json({ error: 'Invalid budget value' });
+  }
+  costTracker.setDailyBudget(budget);
+  res.json({ success: true, budget });
+});
+
+app.get('/api/queue/status', (req, res) => {
+  const userId = (req as any).userId || 'anonymous';
+  const position = claudeQueue.getPosition(userId);
+  const estimatedWaitTime = claudeQueue.getEstimatedWaitTime(userId);
+  const stats = claudeQueue.getStats();
+  
+  res.json({
+    position,
+    estimatedWaitTime,
+    queuedJobs: stats.queuedJobs,
+    processingJobs: stats.processingJobs,
+  });
+});
+
 app.post('/api/admin/cache/clear', (req, res) => {
   const { target } = req.body || {};
   if (target === 'claude' || target === 'all') claudeCache.clear();
@@ -124,6 +159,21 @@ app.post('/api/claude/messages', claudeLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: model, max_tokens, messages' });
     }
 
+    // Get user info from auth middleware
+    const userId = (req as any).userId || 'anonymous';
+    const tier = (req as any).tier || 'free';
+    const usage = (req as any).usage;
+
+    // Check usage limits
+    const limitCheck = checkUsageLimits(tier, usage, 'claude');
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        error: limitCheck.reason,
+        retryAfter: limitCheck.resetIn,
+        type: 'usage_limit_exceeded',
+      });
+    }
+
     // Build cache key from request payload
     const cacheKey = `claude:${JSON.stringify({ model, messages, tools, system })}`;
     const cached = claudeCache.get(cacheKey);
@@ -135,16 +185,31 @@ app.post('/api/claude/messages', claudeLimiter, async (req, res) => {
 
     if (isDev) console.log(`[Server] Proxying Claude request: model=${model}, max_tokens=${max_tokens}`);
 
-    const createParams: any = { model, max_tokens, messages };
-    if (tools) createParams.tools = tools;
-    if (system) createParams.system = system;
+    // Increment usage counter
+    incrementUsage(req, 'claude');
 
-    const response = await anthropic.messages.create(createParams);
+    // Queue the Claude API call
+    const result = await claudeQueue.enqueue(userId, tier, async () => {
+      const createParams: any = { model, max_tokens, messages };
+      if (tools) createParams.tools = tools;
+      if (system) createParams.system = system;
+
+      const response = await anthropic.messages.create(createParams);
+      
+      // Track cost
+      const inputTokens = response.usage?.input_tokens || 0;
+      const outputTokens = response.usage?.output_tokens || 0;
+      const cost = costTracker.record(model, inputTokens, outputTokens, '/api/claude/messages', userId);
+      
+      if (isDev) console.log(`[CostTracker] Request cost: $${cost.toFixed(4)} (${inputTokens} in, ${outputTokens} out)`);
+      
+      return response.content;
+    });
 
     // Cache the response content
-    claudeCache.set(cacheKey, response.content);
+    claudeCache.set(cacheKey, result);
 
-    return res.json({ content: response.content, cached: false });
+    return res.json({ content: result, cached: false });
   } catch (error: any) {
     console.error('[Server] Claude API error:', error.status || error.message);
 
@@ -176,6 +241,30 @@ app.post('/api/claude/analysis', analysisLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Get user info from auth middleware
+    const userId = (req as any).userId || 'anonymous';
+    const tier = (req as any).tier || 'free';
+    const usage = (req as any).usage;
+
+    // Check both analysis and Claude call limits
+    const analysisLimitCheck = checkUsageLimits(tier, usage, 'analysis');
+    if (!analysisLimitCheck.allowed) {
+      return res.status(429).json({
+        error: analysisLimitCheck.reason,
+        retryAfter: analysisLimitCheck.resetIn,
+        type: 'usage_limit_exceeded',
+      });
+    }
+
+    const claudeLimitCheck = checkUsageLimits(tier, usage, 'claude');
+    if (!claudeLimitCheck.allowed) {
+      return res.status(429).json({
+        error: claudeLimitCheck.reason,
+        retryAfter: claudeLimitCheck.resetIn,
+        type: 'usage_limit_exceeded',
+      });
+    }
+
     const cacheKey = `analysis:${JSON.stringify({ model, messages })}`;
     const cached = claudeCache.get(cacheKey);
     if (cached) {
@@ -186,16 +275,32 @@ app.post('/api/claude/analysis', analysisLimiter, async (req, res) => {
 
     if (isDev) console.log(`[Server] Proxying analysis request: model=${model}`);
 
-    const createParams: any = { model, max_tokens, messages };
-    if (tools) createParams.tools = tools;
-    if (system) createParams.system = system;
+    // Increment usage counters
+    incrementUsage(req, 'analysis');
+    incrementUsage(req, 'claude');
 
-    const response = await anthropic.messages.create(createParams);
+    // Queue the Claude API call
+    const result = await claudeQueue.enqueue(userId, tier, async () => {
+      const createParams: any = { model, max_tokens, messages };
+      if (tools) createParams.tools = tools;
+      if (system) createParams.system = system;
 
-    // Cache analysis results for 30 minutes
-    claudeCache.set(cacheKey, response.content, 30 * 60 * 1000);
+      const response = await anthropic.messages.create(createParams);
+      
+      // Track cost
+      const inputTokens = response.usage?.input_tokens || 0;
+      const outputTokens = response.usage?.output_tokens || 0;
+      const cost = costTracker.record(model, inputTokens, outputTokens, '/api/claude/analysis', userId);
+      
+      if (isDev) console.log(`[CostTracker] Analysis cost: $${cost.toFixed(4)} (${inputTokens} in, ${outputTokens} out)`);
+      
+      return response.content;
+    });
 
-    return res.json({ content: response.content, cached: false });
+    // Cache analysis results for 2 hours (increased from 30 minutes)
+    claudeCache.set(cacheKey, result, 2 * 60 * 60 * 1000);
+
+    return res.json({ content: result, cached: false });
   } catch (error: any) {
     console.error('[Server] Claude analysis error:', error.status || error.message);
 

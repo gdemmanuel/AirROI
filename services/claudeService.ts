@@ -827,7 +827,7 @@ export const scoreCompStrength = async (
 
 // Cache for amenity cost estimates (keyed by address to avoid repeated Claude calls)
 const amenityCostCache = new Map<string, { data: any; timestamp: number }>();
-const AMENITY_CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+const AMENITY_CACHE_DURATION = 1000 * 60 * 60 * 2; // 2 hours (increased for production)
 let lastAmenityCostEstimationTime = 0;
 const AMENITY_ESTIMATION_THROTTLE = 5000; // Minimum 5 seconds between estimations
 

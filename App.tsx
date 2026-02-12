@@ -81,6 +81,9 @@ const App: React.FC = () => {
   // Amenity cost estimation state (background task)
   const [amenityCosts, setAmenityCosts] = useState<any>(null);
   const [isEstimatingAmenityCosts, setIsEstimatingAmenityCosts] = useState(false);
+  
+  // Amenity estimation toggle (opt-in to save API calls)
+  const [includeAmenityEstimation, setIncludeAmenityEstimation] = useState(false);
   const [isLoadingSensitivity, setIsLoadingSensitivity] = useState(false);
   const [isLoadingAmenityROI, setIsLoadingAmenityROI] = useState(false);
   const [isLoadingPathToYes, setIsLoadingPathToYes] = useState(false);
@@ -300,7 +303,8 @@ const App: React.FC = () => {
       
       // Fire off background task: estimate amenity costs based on property location
       // This runs after the analysis completes so the dashboard displays immediately
-      if (factual?.propertyType && marketStatsQuery.data) {
+      // Only if user has opted in (to save API calls and reduce rate limits)
+      if (includeAmenityEstimation && factual?.propertyType && marketStatsQuery.data) {
         setIsEstimatingAmenityCosts(true);
         estimateAmenityCosts(
           targetAddress,
@@ -317,7 +321,7 @@ const App: React.FC = () => {
           setIsEstimatingAmenityCosts(false);
         });
       }
-  }, [isAnalyzing, analysisQuery.isSuccess, analysisQuery.data, analysisQuery.fetchStatus, propertyQuery.data, targetAddress]);
+  }, [isAnalyzing, analysisQuery.isSuccess, analysisQuery.data, analysisQuery.fetchStatus, propertyQuery.data, targetAddress, includeAmenityEstimation]);
 
   // Handle errors
   useEffect(() => {
@@ -803,6 +807,8 @@ const App: React.FC = () => {
             isUsingWebData={isUsingWebData}
             analysisError={analysisError}
             suggestionRef={suggestionRef as React.RefObject<HTMLDivElement>}
+            includeAmenityEstimation={includeAmenityEstimation}
+            onToggleAmenityEstimation={setIncludeAmenityEstimation}
           />
         )}
 

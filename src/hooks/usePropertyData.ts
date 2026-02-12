@@ -20,7 +20,7 @@ export const usePropertyData = (address: string, enabled: boolean = true) => {
     queryKey: ['property', address],
     queryFn: () => fetchPropertyData(address),
     enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     refetchOnMount: false, // Use cache on repeat searches
   });
 };
@@ -33,7 +33,7 @@ export const useMarketStats = (zipCode: string | undefined, enabled: boolean = t
     queryKey: ['marketStats', zipCode],
     queryFn: () => fetchMarketStats(zipCode!),
     enabled: enabled && !!zipCode,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     refetchOnMount: false, // Use cache on repeat searches
   });
 };
@@ -46,7 +46,7 @@ export const useRentEstimate = (address: string, enabled: boolean = true) => {
     queryKey: ['rentEstimate', address],
     queryFn: () => fetchRentEstimate(address),
     enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     refetchOnMount: false, // Use cache on repeat searches
   });
 };
@@ -65,7 +65,7 @@ export const useSTRData = (
     queryKey: ['strData', address, propertyType, bedrooms, bathrooms],
     queryFn: () => fetchSTRData(address, propertyType, bedrooms, bathrooms),
     enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     refetchOnMount: false, // Use cache on repeat searches
   });
 };
@@ -83,7 +83,7 @@ export const useWebSTRData = (
     queryKey: ['webSTRData', address, bedrooms, bathrooms],
     queryFn: () => searchWebForSTRData(address, bedrooms, bathrooms),
     enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     retry: 1, // Only retry once for Claude calls
     refetchOnMount: false, // Use cache on repeat searches
   });
@@ -107,7 +107,7 @@ export const usePropertyAnalysis = (
     queryKey: ['propertyAnalysis', address],
     queryFn: () => analyzeProperty(address, factual, marketStats, rentEstimate, strData, strComps),
     enabled: enabled && !!address,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     retry: (failureCount, error: any) => {
       // Don't retry on 429 - backoff won't help, user should wait
       if (error?.status === 429) return false;
@@ -130,7 +130,7 @@ export const useRentalListings = (
     queryKey: ['rentalListings', zipCode, bedrooms, propertyType],
     queryFn: () => fetchRentalListings(zipCode!, bedrooms, propertyType),
     enabled: enabled && !!zipCode,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 2 * 60 * 60 * 1000, // 2 hours (increased for production)
     refetchOnMount: false,
   });
 };

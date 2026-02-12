@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, CheckCircle, Clock, Database, Globe, Sparkles } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, Database, Globe, Sparkles, Users } from 'lucide-react';
 
 export type AnalysisStep = 
   | 'property'
@@ -40,6 +40,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   startTime,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [queueInfo, setQueueInfo] = useState<{ position: number; estimatedWaitTime: number; queuedJobs: number } | null>(null);
 
   useEffect(() => {
     if (!isVisible || !startTime) {
@@ -53,6 +54,31 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
     return () => clearInterval(interval);
   }, [isVisible, startTime]);
+
+  // Poll queue status every 2 seconds when visible
+  useEffect(() => {
+    if (!isVisible) {
+      setQueueInfo(null);
+      return;
+    }
+
+    const fetchQueueStatus = async () => {
+      try {
+        const res = await fetch('/api/queue/status');
+        if (res.ok) {
+          const data = await res.json();
+          setQueueInfo(data);
+        }
+      } catch (e) {
+        // Ignore errors - queue info is optional
+      }
+    };
+
+    fetchQueueStatus();
+    const interval = setInterval(fetchQueueStatus, 2000);
+
+    return () => clearInterval(interval);
+  }, [isVisible]);
 
   if (!isVisible) return null;
 
@@ -76,6 +102,22 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
   return (
     <div className="bg-slate-900/95 backdrop-blur-sm rounded-2xl border border-white/10 p-6 shadow-2xl">
+      {/* Queue Info Banner */}
+      {queueInfo && (queueInfo.position > 0 || queueInfo.queuedJobs > 0) && (
+        <div className="mb-4 p-3 bg-amber-500/20 border border-amber-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-amber-300">
+            <Users size={14} />
+            <span className="text-[11px] font-bold">
+              {queueInfo.position > 0 ? (
+                <>Queue Position: #{queueInfo.position} • Est. Wait: {queueInfo.estimatedWaitTime}s</>
+              ) : (
+                <>Processing your request • {queueInfo.processingJobs} job(s) active</>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Progress Bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-2">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity, Server, Clock, Database, Users, Zap, RefreshCw, Trash2,
-  AlertTriangle, CheckCircle, XCircle, BarChart3, Shield, Cpu, HardDrive, HelpCircle
+  AlertTriangle, CheckCircle, XCircle, BarChart3, Shield, Cpu, HardDrive, HelpCircle, DollarSign
 } from 'lucide-react';
 
 // ============================================================================
@@ -120,6 +120,7 @@ const AdminTab: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [clearing, setClearing] = useState<string | null>(null);
+  const [costData, setCostData] = useState<any>(null);
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -136,11 +137,27 @@ const AdminTab: React.FC = () => {
     }
   }, []);
 
+  const fetchCosts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/costs');
+      if (res.ok) {
+        const data = await res.json();
+        setCostData(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch cost data:', e);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 30000);
+    fetchCosts();
+    const interval = setInterval(() => {
+      fetchMetrics();
+      fetchCosts();
+    }, 30000);
     return () => clearInterval(interval);
-  }, [fetchMetrics]);
+  }, [fetchMetrics, fetchCosts]);
 
   const handleClearCache = async (target: 'claude' | 'rentcast' | 'all') => {
     setClearing(target);
@@ -452,6 +469,99 @@ const AdminTab: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================== */}
+      {/* SECTION 2C: API Cost Tracking                                      */}
+      {/* ================================================================== */}
+      {costData && (
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign size={16} className="text-slate-400" />
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">API Cost Tracking</h3>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
+                costData.status === 'exceeded' ? 'bg-red-100 text-red-600' :
+                costData.status === 'warning' ? 'bg-amber-100 text-amber-600' :
+                'bg-emerald-100 text-emerald-600'
+              }`}>
+                {costData.status === 'exceeded' ? 'Budget Exceeded' :
+                 costData.status === 'warning' ? 'Approaching Limit' :
+                 'Within Budget'}
+              </div>
+            </div>
+          </div>
+          <div className="p-5 space-y-4">
+            {/* Budget Overview */}
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Today's Cost</div>
+                <div className="text-2xl font-black text-slate-900">${costData.today.totalCost.toFixed(2)}</div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Daily Budget</div>
+                <div className="text-2xl font-black text-slate-900">${costData.dailyBudget.toFixed(2)}</div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Remaining</div>
+                <div className={`text-2xl font-black ${costData.remaining > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  ${costData.remaining.toFixed(2)}
+                </div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <div className="text-xs text-slate-500 uppercase tracking-wider font-black mb-1">Usage</div>
+                <div className={`text-2xl font-black ${
+                  costData.budgetPercent >= 100 ? 'text-red-600' :
+                  costData.budgetPercent >= 80 ? 'text-amber-600' :
+                  'text-emerald-600'
+                }`}>
+                  {costData.budgetPercent.toFixed(1)}%
+                </div>
+              </div>
+            </div>
+
+            {/* Budget Progress Bar */}
+            <div>
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                <span className="text-slate-600">Budget Progress</span>
+                <span className="text-slate-500">{costData.today.totalCalls} API calls today</span>
+              </div>
+              <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all ${
+                    costData.budgetPercent >= 100 ? 'bg-red-500' :
+                    costData.budgetPercent >= 80 ? 'bg-amber-500' :
+                    'bg-emerald-500'
+                  }`}
+                  style={{ width: `${Math.min(costData.budgetPercent, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Cost by Model */}
+            {Object.keys(costData.today.byModel).length > 0 && (
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Cost by Model</div>
+                <div className="space-y-2">
+                  {Object.entries(costData.today.byModel).map(([model, data]: [string, any]) => (
+                    <div key={model} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Cpu size={14} className="text-slate-400" />
+                        <div>
+                          <div className="text-xs font-black text-slate-900">{model}</div>
+                          <div className="text-[10px] text-slate-500">{data.calls} calls • {data.inputTokens.toLocaleString()} in / {data.outputTokens.toLocaleString()} out tokens</div>
+                        </div>
+                      </div>
+                      <div className="text-sm font-black text-slate-900">${data.cost.toFixed(3)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

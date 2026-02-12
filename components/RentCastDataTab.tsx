@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  BarChart3, TrendingUp, MapPin, Tag, Users, Activity, Home, DollarSign
+  BarChart3, TrendingUp, MapPin, Tag, Users, Activity, Home, DollarSign, Clock, Droplets, Flame, Car
 } from 'lucide-react';
 import ErrorBoundary from './ui/ErrorBoundary';
 import { formatCurrency } from '../utils/formatCurrency';
@@ -22,7 +22,7 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
   bedroomStats,
   rentalListings
 }) => {
-  const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = React.useState<string | null>('health');
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -30,95 +30,165 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-4 p-4 lg:p-8 animate-in fade-in duration-700">
-      {/* Market Health */}
+      {/* Property Value & Listing Intel Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* AVM Value Range */}
+        {propertyData?.avmValueRange && (
+          <div className="bg-white rounded-xl border border-slate-100 p-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-4">AVM Value Range</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-black text-slate-600">Last Sale Price</span>
+                  <span className="text-lg font-black text-slate-900">{formatCurrency(propertyData.lastSalePrice || 0)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">{formatCurrency(propertyData.avmValueRange.low)}</span>
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full relative overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full"
+                      style={{
+                        width: `${Math.min(100, Math.max(10, ((propertyData.lastSalePrice || propertyData.avmValueRange.low) - propertyData.avmValueRange.low) / (propertyData.avmValueRange.high - propertyData.avmValueRange.low) * 100))}%`
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-slate-500">{formatCurrency(propertyData.avmValueRange.high)}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">ESTIMATE LOW</p>
+                  <p className="text-base font-black text-slate-900">{formatCurrency(propertyData.avmValueRange.low)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">ESTIMATE HIGH</p>
+                  <p className="text-base font-black text-slate-900">{formatCurrency(propertyData.avmValueRange.high)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Listing Intel */}
+        {propertyData?.listingDetails && (propertyData.listingDetails.daysOnMarket || propertyData.listingDetails.listingType) && (
+          <div className="bg-white rounded-xl border border-slate-100 p-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-4">Listing Intelligence</h3>
+            <div className="space-y-3">
+              {propertyData.listingDetails.daysOnMarket != null && (
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100 last:pb-0 last:border-0">
+                  <span className="text-sm font-black text-slate-600">Days on Market</span>
+                  <span className={`text-lg font-black ${propertyData.listingDetails.daysOnMarket > 90 ? 'text-emerald-600' : propertyData.listingDetails.daysOnMarket > 30 ? 'text-amber-600' : 'text-slate-900'}`}>{propertyData.listingDetails.daysOnMarket}</span>
+                </div>
+              )}
+              {propertyData.listingDetails.listingType && (
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100 last:pb-0 last:border-0">
+                  <span className="text-sm font-black text-slate-600">Listing Type</span>
+                  <span className={`px-3 py-1 rounded text-xs font-black ${
+                    propertyData.listingDetails.listingType === 'Foreclosure' ? 'bg-red-100 text-red-700' :
+                    propertyData.listingDetails.listingType === 'Short Sale' ? 'bg-orange-100 text-orange-700' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>{propertyData.listingDetails.listingType}</span>
+                </div>
+              )}
+              {propertyData.listingDetails.priceHistory && propertyData.listingDetails.priceHistory.length > 0 && (
+                <div className="pt-3 border-t border-slate-100">
+                  <p className="text-xs text-slate-500 mb-2 font-black">RECENT PRICE HISTORY</p>
+                  <div className="space-y-1">
+                    {propertyData.listingDetails.priceHistory.slice(0, 3).map((ph, i) => (
+                      <div key={i} className="flex justify-between text-xs">
+                        <span className="text-slate-600">{new Date(ph.date).toLocaleDateString()}</span>
+                        <span className="font-black text-slate-900">{formatCurrency(ph.price)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Market Health & Bedroom Stats */}
       {marketStats && (marketStats.saleData || marketStats.rentalData) && (
-        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
           <button
             onClick={() => toggleSection('health')}
             className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600"><BarChart3 size={20} /></div>
-              <div className="text-left">
-                <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Market Health</h3>
-                <p className="text-sm text-slate-500 mt-1">ZIP {propertyData?.zipCode}</p>
-              </div>
-            </div>
-            <div className={`transition-transform ${expandedSection === 'health' ? 'rotate-180' : ''}`}>
-              <BarChart3 size={20} className="text-slate-400" />
-            </div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Market Health</h3>
+            <span className={`transition-transform ${expandedSection === 'health' ? 'rotate-180' : ''}`}>
+              <BarChart3 size={18} className="text-slate-400" />
+            </span>
           </button>
 
           {expandedSection === 'health' && (
-            <div className="border-t border-slate-100 p-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div className="border-t border-slate-100 p-6 space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {marketStats.saleData?.medianPrice != null && (
-                  <div className="p-4 bg-slate-50 rounded-xl">
-                    <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-2">MEDIAN PRICE</p>
-                    <p className="text-2xl font-black text-slate-900">{formatCurrency(marketStats.saleData.medianPrice)}</p>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2 font-black">MEDIAN SALE PRICE</p>
+                    <p className="text-base font-black text-slate-900">{formatCurrency(marketStats.saleData.medianPrice)}</p>
                   </div>
                 )}
                 {marketStats.saleData?.averageDaysOnMarket != null && (
-                  <div className="p-4 bg-slate-50 rounded-xl">
-                    <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-2">AVG DOM (SALE)</p>
-                    <p className="text-2xl font-black text-slate-900">{Math.round(marketStats.saleData.averageDaysOnMarket)} days</p>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2 font-black">AVG DOM (SALE)</p>
+                    <p className="text-base font-black text-slate-900">{Math.round(marketStats.saleData.averageDaysOnMarket)} days</p>
                   </div>
                 )}
                 {marketStats.saleData?.totalListings != null && (
-                  <div className="p-4 bg-slate-50 rounded-xl">
-                    <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-2">SALE LISTINGS</p>
-                    <p className="text-2xl font-black text-slate-900">{marketStats.saleData.totalListings}</p>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2 font-black">SALE LISTINGS</p>
+                    <p className="text-base font-black text-slate-900">{marketStats.saleData.totalListings}</p>
                   </div>
                 )}
                 {marketStats.rentalData?.medianRent != null && (
-                  <div className="p-4 bg-blue-50 rounded-xl">
-                    <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">MEDIAN RENT</p>
-                    <p className="text-2xl font-black text-blue-900">{formatCurrency(marketStats.rentalData.medianRent)}/mo</p>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2 font-black">MEDIAN RENT</p>
+                    <p className="text-base font-black text-slate-900">{formatCurrency(marketStats.rentalData.medianRent)}/mo</p>
                   </div>
                 )}
                 {marketStats.rentalData?.averageDaysOnMarket != null && (
-                  <div className="p-4 bg-blue-50 rounded-xl">
-                    <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">AVG DOM (RENTAL)</p>
-                    <p className="text-2xl font-black text-blue-900">{Math.round(marketStats.rentalData.averageDaysOnMarket)} days</p>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2 font-black">AVG DOM (RENTAL)</p>
+                    <p className="text-base font-black text-slate-900">{Math.round(marketStats.rentalData.averageDaysOnMarket)} days</p>
                   </div>
                 )}
                 {marketStats.rentalData?.totalListings != null && (
-                  <div className="p-4 bg-blue-50 rounded-xl">
-                    <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">RENTAL LISTINGS</p>
-                    <p className="text-2xl font-black text-blue-900">{marketStats.rentalData.totalListings}</p>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2 font-black">RENTAL LISTINGS</p>
+                    <p className="text-base font-black text-slate-900">{marketStats.rentalData.totalListings}</p>
                   </div>
                 )}
               </div>
 
               {/* Bedroom-Matched Stats */}
               {(bedroomStats.sale || bedroomStats.rental) && (
-                <div className="pt-6 border-t border-slate-100">
-                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-4">
-                    {propertyData?.bedrooms || '?'} Bedroom Matched Stats
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-xs text-slate-500 mb-3 font-black uppercase">{propertyData?.bedrooms || '?'} Bedroom Matched Statistics</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {bedroomStats.rental?.medianRent != null && (
-                      <div className="p-4 bg-emerald-50 rounded-xl">
-                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">Median Rent</p>
-                        <p className="text-xl font-black text-emerald-900">{formatCurrency(bedroomStats.rental.medianRent)}/mo</p>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Median Rent</p>
+                        <p className="text-base font-black text-slate-900">{formatCurrency(bedroomStats.rental.medianRent)}/mo</p>
                       </div>
                     )}
                     {bedroomStats.sale?.medianPrice != null && (
-                      <div className="p-4 bg-emerald-50 rounded-xl">
-                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">Median Price</p>
-                        <p className="text-xl font-black text-emerald-900">{formatCurrency(bedroomStats.sale.medianPrice)}</p>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Median Price</p>
+                        <p className="text-base font-black text-slate-900">{formatCurrency(bedroomStats.sale.medianPrice)}</p>
                       </div>
                     )}
                     {bedroomStats.rental?.totalListings != null && (
-                      <div className="p-4 bg-emerald-50 rounded-xl">
-                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">Listings</p>
-                        <p className="text-xl font-black text-emerald-900">{bedroomStats.rental.totalListings}</p>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Listings</p>
+                        <p className="text-base font-black text-slate-900">{bedroomStats.rental.totalListings}</p>
                       </div>
                     )}
                     {bedroomStats.sale?.averageDaysOnMarket != null && (
-                      <div className="p-4 bg-emerald-50 rounded-xl">
-                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">Avg DOM</p>
-                        <p className="text-xl font-black text-emerald-900">{Math.round(bedroomStats.sale.averageDaysOnMarket)} days</p>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Avg DOM</p>
+                        <p className="text-base font-black text-slate-900">{Math.round(bedroomStats.sale.averageDaysOnMarket)} days</p>
                       </div>
                     )}
                   </div>
@@ -131,21 +201,15 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
       {/* Market Trends */}
       {(marketTrends.saleTrends.length > 2 || marketTrends.rentalTrends.length > 2) && (
-        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
           <button
             onClick={() => toggleSection('trends')}
             className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-50 rounded-xl text-purple-600"><TrendingUp size={20} /></div>
-              <div className="text-left">
-                <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Market Trends</h3>
-                <p className="text-sm text-slate-500 mt-1">Historical Data (2020+)</p>
-              </div>
-            </div>
-            <div className={`transition-transform ${expandedSection === 'trends' ? 'rotate-180' : ''}`}>
-              <TrendingUp size={20} className="text-slate-400" />
-            </div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Market Trends</h3>
+            <span className={`transition-transform ${expandedSection === 'trends' ? 'rotate-180' : ''}`}>
+              <TrendingUp size={18} className="text-slate-400" />
+            </span>
           </button>
 
           {expandedSection === 'trends' && (
@@ -164,44 +228,39 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
       {/* Sale Comparables */}
       {propertyData?.avmComparables && propertyData.avmComparables.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
           <button
             onClick={() => toggleSection('saleComps')}
             className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 rounded-xl text-indigo-600"><DollarSign size={20} /></div>
-              <div className="text-left">
-                <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Sale Comparables</h3>
-                <p className="text-sm text-slate-500 mt-1">{propertyData.avmComparables.length} properties</p>
-              </div>
-            </div>
-            <div className={`transition-transform ${expandedSection === 'saleComps' ? 'rotate-180' : ''}`}>
-              <DollarSign size={20} className="text-slate-400" />
-            </div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Sale Comparables</h3>
+            <span className={`transition-transform ${expandedSection === 'saleComps' ? 'rotate-180' : ''}`}>
+              <DollarSign size={18} className="text-slate-400" />
+            </span>
           </button>
 
           {expandedSection === 'saleComps' && (
             <div className="border-t border-slate-100 p-6">
               <div className="space-y-3">
                 {propertyData.avmComparables.map((comp, i) => (
-                  <div key={i} className="p-4 bg-slate-50 rounded-xl">
-                    <div className="flex justify-between items-start mb-2">
+                  <div key={i} className="p-4 border border-slate-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/50 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <p className="font-black text-slate-900">{comp.formattedAddress}</p>
-                        <p className="text-sm text-slate-500">{comp.bedrooms}bd / {comp.bathrooms}ba • {comp.squareFootage?.toLocaleString()}sf</p>
+                        <p className="font-black text-slate-900 text-sm">{comp.formattedAddress}</p>
+                        <p className="text-xs text-slate-500 mt-1">{comp.bedrooms}bd / {comp.bathrooms}ba • {comp.squareFootage?.toLocaleString()}sf</p>
                       </div>
                       {comp.correlation != null && (
-                        <span className={`px-3 py-1 rounded-lg text-xs font-black ${
+                        <span className={`px-3 py-1 rounded text-xs font-black whitespace-nowrap ml-2 ${
                           comp.correlation >= 0.9 ? 'bg-emerald-100 text-emerald-700' :
                           comp.correlation >= 0.7 ? 'bg-amber-100 text-amber-700' :
                           'bg-slate-100 text-slate-600'
                         }`}>{(comp.correlation * 100).toFixed(0)}% match</span>
                       )}
                     </div>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex gap-4 text-xs text-slate-600">
                       <span className="font-black text-slate-900">{formatCurrency(comp.price)}</span>
-                      <span className="text-slate-500">{comp.distance?.toFixed(1)}mi • {comp.daysOnMarket} DOM</span>
+                      {comp.distance != null && <span>{comp.distance.toFixed(1)}mi away</span>}
+                      {comp.daysOnMarket != null && <span>{comp.daysOnMarket} DOM</span>}
                     </div>
                   </div>
                 ))}
@@ -213,37 +272,31 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
 
       {/* Rental Listings */}
       {rentalListings && rentalListings.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
           <button
             onClick={() => toggleSection('rentals')}
             className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-green-50 rounded-xl text-green-600"><Home size={20} /></div>
-              <div className="text-left">
-                <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Active Rental Listings</h3>
-                <p className="text-sm text-slate-500 mt-1">{rentalListings.length} properties</p>
-              </div>
-            </div>
-            <div className={`transition-transform ${expandedSection === 'rentals' ? 'rotate-180' : ''}`}>
-              <Home size={20} className="text-slate-400" />
-            </div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Active Rental Listings</h3>
+            <span className={`transition-transform ${expandedSection === 'rentals' ? 'rotate-180' : ''}`}>
+              <Home size={18} className="text-slate-400" />
+            </span>
           </button>
 
           {expandedSection === 'rentals' && (
             <div className="border-t border-slate-100 p-6">
               <div className="space-y-3">
                 {rentalListings.map((listing, i) => (
-                  <div key={i} className="p-4 bg-slate-50 rounded-xl">
-                    <div className="flex justify-between items-start mb-2">
+                  <div key={i} className="p-4 border border-slate-100 rounded-lg hover:border-green-200 hover:bg-green-50/50 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <p className="font-black text-slate-900">{listing.formattedAddress}</p>
-                        <p className="text-sm text-slate-500">{listing.bedrooms}bd / {listing.bathrooms}ba • {listing.squareFootage?.toLocaleString()}sf</p>
+                        <p className="font-black text-slate-900 text-sm">{listing.formattedAddress}</p>
+                        <p className="text-xs text-slate-500 mt-1">{listing.bedrooms}bd / {listing.bathrooms}ba • {listing.squareFootage?.toLocaleString()}sf</p>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex gap-4 text-xs text-slate-600">
                       <span className="font-black text-emerald-700">{formatCurrency(listing.price)}/mo</span>
-                      <span className="text-slate-500">{listing.daysOnMarket} DOM</span>
+                      {listing.daysOnMarket && <span>{listing.daysOnMarket} DOM</span>}
                     </div>
                   </div>
                 ))}
@@ -254,10 +307,10 @@ const RentCastDataTab: React.FC<RentCastDataTabProps> = ({
       )}
 
       {!propertyData && !marketStats && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+        <div className="bg-white rounded-xl border border-slate-100 p-12 text-center">
           <BarChart3 size={48} className="mx-auto mb-4 text-slate-400" />
-          <p className="text-lg font-black text-slate-600 uppercase tracking-wider mb-2">No RentCast Data Available</p>
-          <p className="text-slate-500">Run an underwriting analysis to view RentCast market data</p>
+          <p className="text-base font-black text-slate-600 uppercase tracking-widest mb-2">No RentCast Data Available</p>
+          <p className="text-slate-500 text-sm">Run an underwriting analysis to view RentCast market data</p>
         </div>
       )}
     </div>

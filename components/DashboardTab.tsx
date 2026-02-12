@@ -116,11 +116,22 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
             </div>
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3 group"><h2 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-white">{displayedAddress}</h2><a href={`https://www.zillow.com/homes/for_sale/${encodeURIComponent(displayedAddress)}_rb/`} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-[#f43f5e] hover:scale-110 rounded-full transition-all text-white"><Map size={14} /></a></div>
-              <div className="flex gap-6 text-slate-600 text-[10px] font-black uppercase tracking-[0.25em]">
+              <div className="flex gap-6 text-slate-600 text-[10px] font-black uppercase tracking-[0.25em] mb-3">
                 <span className="flex gap-2 items-center border-r border-white/10 pr-6 last:border-0"><Home size={14} className="text-[#f43f5e]" /> {insight.beds} BEDS</span>
                 <span className="flex gap-2 items-center border-r border-white/10 pr-6 last:border-0"><Layers size={14} className="text-[#3b82f6]" /> {insight.baths} BATHS</span>
                 <span className="flex gap-2 items-center border-r border-white/10 pr-6 last:border-0"><Ruler size={14} className="text-[#10b981]" /> {insight.sqft.toLocaleString()} SQFT</span>
               </div>
+              {/* Property Features Inline */}
+              {propertyData?.features && Object.values(propertyData.features).some(v => v != null) && (
+                <div className="flex flex-wrap gap-2">
+                  {propertyData.features.pool && <span className="px-2 py-1 bg-blue-500/20 text-blue-200 rounded text-[8px] font-black flex items-center gap-1"><Droplets size={10} /> Pool</span>}
+                  {propertyData.features.garage && <span className="px-2 py-1 bg-slate-500/20 text-slate-200 rounded text-[8px] font-black flex items-center gap-1"><Car size={10} /> {propertyData.features.garageSpaces || '?'}-Car</span>}
+                  {propertyData.features.fireplace && <span className="px-2 py-1 bg-orange-500/20 text-orange-200 rounded text-[8px] font-black flex items-center gap-1"><Flame size={10} /> Fireplace</span>}
+                  {propertyData.features.coolingType && <span className="px-2 py-1 bg-cyan-500/20 text-cyan-200 rounded text-[8px] font-black">AC: {propertyData.features.coolingType}</span>}
+                  {propertyData.features.heatingType && <span className="px-2 py-1 bg-red-500/20 text-red-200 rounded text-[8px] font-black">Heat: {propertyData.features.heatingType}</span>}
+                  {propertyData.zoning && <span className="px-2 py-1 bg-amber-500/20 text-amber-200 rounded text-[8px] font-black">Zone: {propertyData.zoning}</span>}
+                </div>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -149,82 +160,6 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
         <div className="p-3 bg-white rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center min-h-[100px]"><div className="flex items-center gap-1 mb-1"><p className="text-[8px] font-black text-[#10b981] uppercase tracking-widest">PROFIT (Y1)</p></div><p className={`text-xl font-black tracking-tighter leading-none ${annualProfit < 0 ? 'text-[#f43f5e]' : 'text-[#10b981]'}`}>{formatCurrency(annualProfit)}</p></div>
         <div className="p-3 bg-white rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center min-h-[100px]"><div className="flex items-center gap-1 mb-1"><p className="text-[8px] font-black text-[#818cf8] uppercase tracking-widest">OWNER SURPLUS</p></div><p className={`text-xl font-black tracking-tighter leading-none ${annualSurplus < 0 ? 'text-[#f43f5e]' : 'text-slate-900'}`}>{formatCurrency(annualSurplus)}</p></div>
       </div>
-
-      {/* Property Details & Features */}
-      {propertyData && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
-          {/* AVM Value Range */}
-          {propertyData.avmValueRange && (
-            <div className="p-4 bg-white rounded-xl border border-slate-100">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1 bg-blue-50 rounded-lg text-blue-500"><TrendingUp size={12} /></div>
-                <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">AVM VALUE RANGE</h4>
-              </div>
-              <div className="flex items-baseline gap-1 mb-1.5">
-                <span className="text-lg font-black text-slate-900 tracking-tight">{formatCurrency(propertyData.lastSalePrice || 0)}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[9px] font-bold">
-                <span className="text-slate-500">{formatCurrency(propertyData.avmValueRange.low)}</span>
-                <div className="flex-1 h-1.5 bg-slate-100 rounded-full relative overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"
-                    style={{
-                      width: `${Math.min(100, Math.max(10, ((propertyData.lastSalePrice || propertyData.avmValueRange.low) - propertyData.avmValueRange.low) / (propertyData.avmValueRange.high - propertyData.avmValueRange.low) * 100))}%`
-                    }}
-                  />
-                </div>
-                <span className="text-slate-500">{formatCurrency(propertyData.avmValueRange.high)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Listing Details */}
-          {propertyData.listingDetails && (propertyData.listingDetails.daysOnMarket || propertyData.listingDetails.listingType) && (
-            <div className="p-4 bg-white rounded-xl border border-slate-100">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1 bg-amber-50 rounded-lg text-amber-500"><Clock size={12} /></div>
-                <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">LISTING INTEL</h4>
-              </div>
-              <div className="space-y-1">
-                {propertyData.listingDetails.daysOnMarket != null && (
-                  <div className="flex justify-between text-[9px] font-black">
-                    <span className="text-slate-600">DAYS ON MARKET</span>
-                    <span className={propertyData.listingDetails.daysOnMarket > 90 ? 'text-emerald-600' : propertyData.listingDetails.daysOnMarket > 30 ? 'text-amber-600' : 'text-slate-900'}>{propertyData.listingDetails.daysOnMarket}</span>
-                  </div>
-                )}
-                {propertyData.listingDetails.listingType && (
-                  <div className="flex justify-between text-[9px] font-black">
-                    <span className="text-slate-600">TYPE</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[7px] ${
-                      propertyData.listingDetails.listingType === 'Foreclosure' ? 'bg-red-100 text-red-700' :
-                      propertyData.listingDetails.listingType === 'Short Sale' ? 'bg-orange-100 text-orange-700' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>{propertyData.listingDetails.listingType}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Property Features */}
-          {propertyData.features && Object.values(propertyData.features).some(v => v != null) && (
-            <div className="p-4 bg-white rounded-xl border border-slate-100">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1 bg-emerald-50 rounded-lg text-emerald-500"><Zap size={12} /></div>
-                <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">PROPERTY FEATURES</h4>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {propertyData.features.pool && <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-[7px] font-black flex items-center gap-0.5"><Droplets size={8} /> Pool</span>}
-                {propertyData.features.garage && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[7px] font-black flex items-center gap-0.5"><Car size={8} /> {propertyData.features.garageSpaces || '?'}-Car</span>}
-                {propertyData.features.fireplace && <span className="px-1.5 py-0.5 bg-orange-50 text-orange-700 rounded text-[7px] font-black flex items-center gap-0.5"><Flame size={8} /> Fireplace</span>}
-                {propertyData.features.coolingType && <span className="px-1.5 py-0.5 bg-cyan-50 text-cyan-700 rounded text-[7px] font-black">AC: {propertyData.features.coolingType}</span>}
-                {propertyData.features.heatingType && <span className="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-[7px] font-black">Heat: {propertyData.features.heatingType}</span>}
-                {propertyData.zoning && <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-[7px] font-black">Zone: {propertyData.zoning}</span>}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Amenities */}
       <div className="p-4 bg-white rounded-xl border border-slate-100 mb-3">

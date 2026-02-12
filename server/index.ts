@@ -342,7 +342,8 @@ const distPath = path.resolve(__dirname, '..', 'dist');
 app.use(express.static(distPath));
 
 // SPA fallback: serve index.html for any non-API route
-app.get('*', (req, res) => {
+// Express 5 requires named wildcard params instead of bare '*'
+app.get('/{*splat}', (req, res) => {
   // Don't serve index.html for API routes (they'll 404 naturally)
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Not found' });

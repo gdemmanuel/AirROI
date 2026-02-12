@@ -6,7 +6,7 @@ export const DEFAULT_CONFIG: PropertyConfig = {
   downPaymentPercent: 20,
   mortgageRate: 6.5,
   helocRate: 7.5,
-  helocFundingPercent: 100,
+  helocFundingPercent: 0,       // Default: no HELOC funding (users enable when needed)
   upgradeCost: 0,
   loanCosts: 7500,
   furnishingsCost: 0, // Now handled via Amenities library
@@ -27,7 +27,7 @@ export const DEFAULT_CONFIG: PropertyConfig = {
   annualAppreciationRate: 3,
   annualRentGrowthRate: 3,
   annualExpenseInflationRate: 2,
-  helocPaydownPercent: 100,
+  helocPaydownPercent: 0,       // Default: no HELOC paydown (users enable when needed)
 };
 
 export const AMENITIES: Amenity[] = [

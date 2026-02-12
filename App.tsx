@@ -10,7 +10,7 @@ import { DEFAULT_CONFIG, AMENITIES } from './constants';
 import { calculateMonthlyProjections, aggregateToYearly } from './utils/financialLogic';
 import { formatCurrency } from './utils/formatCurrency';
 import { exportUnderwritingReport } from './utils/exportReport';
-import { analyzeProperty, suggestAmenityImpact, searchWebForSTRData, runSensitivityAnalysis, runAmenityROI, calculatePathToYes, generateLenderPacket, onRateLimitCountdown } from './services/claudeService';
+import { analyzeProperty, suggestAmenityImpact, searchWebForSTRData, runSensitivityAnalysis, runAmenityROI, calculatePathToYes, generateLenderPacket, onRateLimitCountdown, estimateAmenityCosts } from './services/claudeService';
 import { SensitivityMatrix, AmenityROIResult, PathToYes, LenderPacket } from './prompts/underwriting';
 import { Save } from 'lucide-react';
 import Charts from './components/Charts';
@@ -77,6 +77,10 @@ const App: React.FC = () => {
   const [amenityROIData, setAmenityROIData] = useState<AmenityROIResult | null>(null);
   const [pathToYesData, setPathToYesData] = useState<PathToYes | null>(null);
   const [lenderPacket, setLenderPacket] = useState<LenderPacket | null>(null);
+  
+  // Amenity cost estimation state (background task)
+  const [amenityCosts, setAmenityCosts] = useState<any>(null);
+  const [isEstimatingAmenityCosts, setIsEstimatingAmenityCosts] = useState(false);
   const [isLoadingSensitivity, setIsLoadingSensitivity] = useState(false);
   const [isLoadingAmenityROI, setIsLoadingAmenityROI] = useState(false);
   const [isLoadingPathToYes, setIsLoadingPathToYes] = useState(false);
@@ -97,6 +101,7 @@ const App: React.FC = () => {
   // ============================================================================
 
   // Load investment targets from localStorage
+  // Load investment targets from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('investmentTargets');
     if (saved) {
@@ -112,6 +117,23 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('investmentTargets', JSON.stringify(investmentTargets));
   }, [investmentTargets]);
+
+  // Load global settings (baseConfig) from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('airroi_global_settings');
+    if (saved) {
+      try {
+        setBaseConfig(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load global settings:', e);
+      }
+    }
+  }, []);
+
+  // Save global settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('airroi_global_settings', JSON.stringify(baseConfig));
+  }, [baseConfig]);
 
   // Subscribe to rate limit countdown updates
   useEffect(() => {
@@ -275,6 +297,26 @@ const App: React.FC = () => {
       setAmenityROIData(null);
       setPathToYesData(null);
       setLenderPacket(null);
+      
+      // Fire off background task: estimate amenity costs based on property location
+      // This runs after the analysis completes so the dashboard displays immediately
+      if (factual?.propertyType && marketStatsQuery.data) {
+        setIsEstimatingAmenityCosts(true);
+        estimateAmenityCosts(
+          targetAddress,
+          factual.propertyType,
+          marketStatsQuery.data
+        ).then((costs) => {
+          if (costs) {
+            setAmenityCosts(costs);
+            if (import.meta.env.DEV) console.log('[App] Amenity costs estimated:', costs);
+          }
+          setIsEstimatingAmenityCosts(false);
+        }).catch((err) => {
+          console.error('[App] Failed to estimate amenity costs:', err);
+          setIsEstimatingAmenityCosts(false);
+        });
+      }
   }, [isAnalyzing, analysisQuery.isSuccess, analysisQuery.data, analysisQuery.fetchStatus, propertyQuery.data, targetAddress]);
 
   // Handle errors
@@ -892,6 +934,8 @@ const App: React.FC = () => {
             handleAddAmenity={handleAddAmenity}
             handleEditAmenity={handleEditAmenity}
             removeAmenity={removeAmenity}
+            amenityCosts={amenityCosts}
+            isEstimatingAmenityCosts={isEstimatingAmenityCosts}
           />
         )}
 

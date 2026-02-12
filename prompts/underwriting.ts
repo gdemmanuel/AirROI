@@ -770,3 +770,67 @@ OUTPUT JSON SCHEMA:
 
 Return ONLY valid JSON, no additional text.
 `;
+
+// ============================================================================
+// AMENITY PRICING PROMPT
+// ============================================================================
+
+export const AMENITY_PRICING_PROMPT = (address: string, propertyType: string, marketData: any): string => {
+  return `You are a real estate development cost estimator specializing in short-term rental amenities.
+
+Given a property location and market context, estimate reasonable installation costs for common amenities. Base estimates on regional factors like labor costs, material availability, and local market demand.
+
+Property Details:
+- Address: ${address}
+- Type: ${propertyType}
+- Market: ${marketData?.marketName || 'Not specified'}
+- Region/State: ${address.split(',').slice(-1)[0]?.trim() || 'Unknown'}
+
+AMENITIES TO ESTIMATE:
+1. Pool (in-ground, typical residential size)
+2. Hot Tub (above-ground 4-6 person)
+3. Cedar Sauna (indoor, compact)
+4. Game Room (basic setup, ~100-150 sq ft)
+5. Luxury Deck (pressure-treated, ~200-300 sq ft, low-to-mid quality)
+6. EV Charger (Level 2, home installation)
+
+For each amenity, provide:
+- minCost: Most budget-friendly installation
+- maxCost: Mid-to-high quality installation
+- reasoning: Why costs vary in this region
+
+Return ONLY valid JSON, no markdown or additional text:
+
+{
+  "pool": {
+    "minCost": 20000,
+    "maxCost": 35000,
+    "reasoning": "string"
+  },
+  "hottub": {
+    "minCost": 6000,
+    "maxCost": 10000,
+    "reasoning": "string"
+  },
+  "sauna": {
+    "minCost": 5000,
+    "maxCost": 8000,
+    "reasoning": "string"
+  },
+  "gameroom": {
+    "minCost": 3000,
+    "maxCost": 6000,
+    "reasoning": "string"
+  },
+  "deck": {
+    "minCost": 10000,
+    "maxCost": 18000,
+    "reasoning": "string"
+  },
+  "evcharger": {
+    "minCost": 1000,
+    "maxCost": 2000,
+    "reasoning": "string"
+  }
+}`;
+};

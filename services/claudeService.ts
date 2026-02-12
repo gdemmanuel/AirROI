@@ -22,7 +22,8 @@ import {
   PACKET_SUMMARY_PROMPT,
   PATH_TO_YES_PROMPT,
   MARKET_DISCOVERY_PROMPT,
-  COMPS_STRENGTH_PROMPT
+  COMPS_STRENGTH_PROMPT,
+  AMENITY_PRICING_PROMPT
 } from "../prompts/underwriting";
 
 // ============================================================================
@@ -820,5 +821,23 @@ export const scoreCompStrength = async (
   } catch (e) {
     console.error("Comp strength scoring failed:", e);
     throw e;
+  }
+};
+
+export const estimateAmenityCosts = async (address: string, propertyType: string, marketData: any) => {
+  try {
+    if (import.meta.env.DEV) console.log('[Claude] Estimating amenity costs for:', address);
+    const content = await claudeProxy({
+      model: getModel('simple_task'), // Fast + cheap (Haiku)
+      max_tokens: 800,
+      messages: [{ role: 'user', content: AMENITY_PRICING_PROMPT(address, propertyType, marketData) }]
+    });
+    const text = extractText(content);
+    const result = parseJSON(text);
+    if (import.meta.env.DEV) console.log('[Claude] Amenity costs estimated:', result);
+    return result;
+  } catch (e) {
+    console.error('Amenity cost estimation failed:', e);
+    return null; // Fallback to hardcoded values
   }
 };

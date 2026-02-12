@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity, Server, Clock, Database, Users, Zap, RefreshCw, Trash2,
-  AlertTriangle, CheckCircle, XCircle, BarChart3, Shield, Cpu, HardDrive, HelpCircle, DollarSign
+  AlertTriangle, CheckCircle, XCircle, BarChart3, Shield, Cpu, HardDrive, HelpCircle, DollarSign, ExternalLink
 } from 'lucide-react';
 
 // ============================================================================
@@ -597,6 +597,42 @@ const AdminTab: React.FC = () => {
             </div>
           </div>
           <div className="p-5 space-y-4">
+            {/* Quick Access Links */}
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg border border-slate-200">
+              <div className="flex-1">
+                <div className="text-xs font-black uppercase tracking-wider text-slate-600 mb-2">API Dashboard Quick Links</div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://console.anthropic.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-black uppercase hover:bg-blue-700 transition-colors"
+                  >
+                    <ExternalLink size={14} />
+                    Claude Dashboard
+                  </a>
+                  <a
+                    href="https://console.anthropic.com/settings/billing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-black uppercase hover:bg-blue-600 transition-colors"
+                  >
+                    <DollarSign size={14} />
+                    Claude Billing
+                  </a>
+                  <a
+                    href="https://app.rentcast.io/app/api"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-black uppercase hover:bg-emerald-700 transition-colors"
+                  >
+                    <ExternalLink size={14} />
+                    RentCast Dashboard
+                  </a>
+                </div>
+              </div>
+            </div>
+
             {/* Budget Overview */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg">

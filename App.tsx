@@ -369,6 +369,7 @@ const App: React.FC = () => {
     let config = { ...baseConfig };
     let totalUpgradeCost = 0;
     let totalFurnishingCost = 0;
+    if (import.meta.env.DEV) console.log('[App] finalConfig calculation - baseConfig occ:', baseConfig.occupancyPercent, 'selectedAmenities:', selectedAmenityIds);
     selectedAmenityIds.forEach(id => {
       const am = amenities.find(a => a.id === id);
       if (am) {
@@ -380,7 +381,9 @@ const App: React.FC = () => {
           // Amenity occupancy boost is a modest increment (typically 2-6%)
           // Cap total occupancy at 95% (realistic market maximum)
           const boostAmount = am.occBoost; // Use the boost value directly (already in percentage points)
-          config.occupancyPercent = Math.min(95, currentOcc + Math.max(0, boostAmount));
+          const newOcc = Math.min(95, currentOcc + Math.max(0, boostAmount));
+          if (import.meta.env.DEV) console.log(`[App] Amenity ${am.name}: occBoost=${am.occBoost}, ${currentOcc}% -> ${newOcc}%`);
+          config.occupancyPercent = newOcc;
         } else if (strategy === 'MTR') {
           config.mtrMonthlyRent += am.adrBoost * 10;
         } else {
@@ -388,6 +391,7 @@ const App: React.FC = () => {
         }
       }
     });
+    if (import.meta.env.DEV) console.log('[App] finalConfig occ result:', config.occupancyPercent);
     config.upgradeCost = totalUpgradeCost;
     config.furnishingsCost = totalFurnishingCost;
     return config;

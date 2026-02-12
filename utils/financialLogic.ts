@@ -191,6 +191,7 @@ export const aggregateToYearly = (monthly: MonthlyProjection[]): MonthlyProjecti
         cashFlowAfterDebt: acc.cashFlowAfterDebt + curr.cashFlowAfterDebt,
         netCashToOwner: acc.netCashToOwner + curr.netCashToOwner,
         adr: acc.adr + curr.adr,
+        occupancy: acc.occupancy + curr.occupancy,
       };
 
       if (idx === slice.length - 1) {
@@ -202,9 +203,10 @@ export const aggregateToYearly = (monthly: MonthlyProjection[]): MonthlyProjecti
       }
 
       return result;
-    }, { ...slice[0], revenue: 0, mgmtFee: 0, maintenance: 0, fixedOpex: 0, propertyTax: 0, hoa: 0, cleaningFeeIncome: 0, cleaningExpense: 0, hostFee: 0, noiPrePlatform: 0, noiAfterPlatform: 0, mortgagePayment: 0, mortgageInterest: 0, mortgagePrincipal: 0, helocInterest: 0, helocPrincipalPaydown: 0, cashFlowAfterDebt: 0, netCashToOwner: 0, adr: 0 });
+    }, { ...slice[0], revenue: 0, mgmtFee: 0, maintenance: 0, fixedOpex: 0, propertyTax: 0, hoa: 0, cleaningFeeIncome: 0, cleaningExpense: 0, hostFee: 0, noiPrePlatform: 0, noiAfterPlatform: 0, mortgagePayment: 0, mortgageInterest: 0, mortgagePrincipal: 0, helocInterest: 0, helocPrincipalPaydown: 0, cashFlowAfterDebt: 0, netCashToOwner: 0, adr: 0, occupancy: 0 });
 
     yearData.adr = yearData.adr / 12;
+    yearData.occupancy = yearData.occupancy / 12;
     yearData.date = `Year ${(i / 12) + 1}`;
     yearly.push(yearData);
   }

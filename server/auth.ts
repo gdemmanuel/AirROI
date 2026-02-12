@@ -236,4 +236,4 @@ export function getSessionStats(): { active: number; total: number; byTier: Reco
   return { active, total: sessions.size, byTier };
 }
 
-export { TIER_LIMITS, checkUsageLimits, incrementUsage };
+export { TIER_LIMITS };

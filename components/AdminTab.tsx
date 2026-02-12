@@ -577,7 +577,7 @@ const AdminTab: React.FC = () => {
       {/* ================================================================== */}
       {/* SECTION 2C: API Cost Tracking                                      */}
       {/* ================================================================== */}
-      {costData && (
+      {costData ? (
         <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
           <div className="p-5 border-b border-slate-100">
             <div className="flex items-center justify-between">
@@ -734,6 +734,18 @@ const AdminTab: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <DollarSign size={16} className="text-slate-400" />
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">API Cost Tracking</h3>
+            </div>
+          </div>
+          <div className="p-5">
+            <p className="text-sm text-slate-500">Loading cost data...</p>
           </div>
         </div>
       )}

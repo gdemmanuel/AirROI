@@ -807,8 +807,6 @@ const App: React.FC = () => {
             isUsingWebData={isUsingWebData}
             analysisError={analysisError}
             suggestionRef={suggestionRef as React.RefObject<HTMLDivElement>}
-            includeAmenityEstimation={includeAmenityEstimation}
-            onToggleAmenityEstimation={setIncludeAmenityEstimation}
           />
         )}
 
@@ -969,6 +967,8 @@ const App: React.FC = () => {
             displayedAddress={displayedAddress}
             propertyData={propertyQuery.data || null}
             marketStats={marketStatsQuery.data}
+            includeAmenityEstimation={includeAmenityEstimation}
+            onToggleAmenityEstimation={setIncludeAmenityEstimation}
           />
         )}
 

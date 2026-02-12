@@ -10,15 +10,12 @@ interface SearchBarProps {
   isUsingWebData: boolean;
   analysisError: string | null;
   suggestionRef: React.RefObject<HTMLDivElement>;
-  includeAmenityEstimation: boolean;
-  onToggleAmenityEstimation: (value: boolean) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   propertyInput, onInputChange, onSearch,
   isAnalyzing, isFetchingFactual, isUsingWebData,
-  analysisError, suggestionRef,
-  includeAmenityEstimation, onToggleAmenityEstimation
+  analysisError, suggestionRef
 }) => {
   return (
     <div className="max-w-[1600px] mx-auto mb-8 print:hidden relative" ref={suggestionRef}>
@@ -39,17 +36,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
           {isAnalyzing || isFetchingFactual ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} className="text-[#f43f5e]" />}
           {isFetchingFactual ? 'FETCHING DATA...' : 'UNDERWRITE'}
         </button>
-      </div>
-      <div className="mt-4 flex items-center gap-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={includeAmenityEstimation}
-            onChange={(e) => onToggleAmenityEstimation(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
-          />
-          <span className="text-[11px] font-black text-slate-600 uppercase">Include AI Amenity Cost Estimation (saves 1 API call)</span>
-        </label>
       </div>
       {analysisError && <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-4"><AlertTriangle size={20} className="text-[#f43f5e]" /><p className="text-[10px] font-black uppercase text-[#f43f5e] tracking-widest">{analysisError}</p></div>}
     </div>

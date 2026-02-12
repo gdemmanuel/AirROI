@@ -19,6 +19,8 @@ interface SettingsTabProps {
   displayedAddress?: string; // Current property address
   propertyData?: any; // Current property data for custom amenity estimation
   marketStats?: any; // Market data for custom amenity estimation
+  includeAmenityEstimation?: boolean; // Whether to include AI amenity estimation
+  onToggleAmenityEstimation?: (value: boolean) => void; // Toggle amenity estimation
 }
 
 const SettingsTab: React.FC<SettingsTabProps> = ({
@@ -26,7 +28,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   amenities, newAmenityName, setNewAmenityName, isSuggestingAmenity,
   handleAddAmenity, handleEditAmenity, removeAmenity,
   amenityCosts, isEstimatingAmenityCosts,
-  displayedAddress, propertyData, marketStats
+  displayedAddress, propertyData, marketStats,
+  includeAmenityEstimation, onToggleAmenityEstimation
 }) => {
   // List of fields that get auto-populated from AI analysis and should be visually distinguished
   const autoPopulatedFields = ['adr', 'occupancyPercent', 'mtrMonthlyRent', 'ltrMonthlyRent', 'propertyTaxMonthly', 'hoaMonthly'];
@@ -137,11 +140,22 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
       {/* Property Amenities Section - Compact List View */}
       <div className="bg-white p-4 rounded-lg border border-slate-200 shadow">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-            <div className="p-2 bg-rose-50 rounded-lg text-[#f43f5e]"><Sparkles size={18} /></div> 
-            Property Amenities
-          </h2>
-          {isEstimatingAmenityCosts && <span className="text-[9px] font-black text-slate-500 animate-pulse">Estimating costs...</span>}
+          <div className="flex-1">
+            <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+              <div className="p-2 bg-rose-50 rounded-lg text-[#f43f5e]"><Sparkles size={18} /></div> 
+              Property Amenities
+            </h2>
+            {isEstimatingAmenityCosts && <span className="text-[9px] font-black text-slate-500 animate-pulse">Estimating costs...</span>}
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeAmenityEstimation || false}
+              onChange={(e) => onToggleAmenityEstimation?.(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-300"
+            />
+            <span className="text-[10px] font-black text-slate-600 uppercase whitespace-nowrap">AI Estimate</span>
+          </label>
         </div>
         
         {/* Add New Amenity Section - Compact */}

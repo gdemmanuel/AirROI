@@ -59,6 +59,11 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
       if (suggestion.adrBoost && suggestion.adrBoost > 0 && suggestion.adrBoost !== am.adrBoost) {
         handleEditAmenity(am.id, { adrBoost: suggestion.adrBoost });
       }
+      
+      // Auto-update occupancy boost if different and valid
+      if (suggestion.occBoost && suggestion.occBoost > 0 && suggestion.occBoost !== am.occBoost) {
+        handleEditAmenity(am.id, { occBoost: suggestion.occBoost });
+      }
     });
   }, [amenityCosts]);
 

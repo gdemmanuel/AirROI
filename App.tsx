@@ -561,7 +561,7 @@ const App: React.FC = () => {
       const aiEstimate = await estimateCustomAmenityCost(
         newAmenityName,
         displayedAddress || targetAddress,
-        propertyData?.propertyType || 'Unknown',
+        propertyQuery.data?.propertyType || 'Unknown',
         marketStatsQuery.data || {}
       );
       
@@ -956,7 +956,7 @@ const App: React.FC = () => {
             amenityCosts={amenityCosts}
             isEstimatingAmenityCosts={isEstimatingAmenityCosts}
             displayedAddress={displayedAddress}
-            propertyData={propertyData}
+            propertyData={propertyQuery.data || null}
             marketStats={marketStatsQuery.data}
           />
         )}

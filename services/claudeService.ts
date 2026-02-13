@@ -92,9 +92,22 @@ const withRetry = async <T>(
         error?.message?.toLowerCase().includes('capacity');
 
       if (isRateLimit && attempt < maxRetries - 1) {
-        const waitSeconds = error?.retryAfter
-          ? parseInt(error.retryAfter)
-          : baseDelay;
+        // Parse retry-after header (could be seconds or a date)
+        let waitSeconds = baseDelay;
+        if (error?.retryAfter) {
+          const retryAfter = error.retryAfter;
+          // If it's a number, check if it's milliseconds (> 1000) or seconds
+          if (typeof retryAfter === 'number' || !isNaN(Number(retryAfter))) {
+            const num = Number(retryAfter);
+            waitSeconds = num > 1000 ? Math.ceil(num / 1000) : num; // Convert ms to seconds if needed
+          } else {
+            // If it's a date string, calculate seconds until that time
+            const retryDate = new Date(retryAfter);
+            waitSeconds = Math.max(1, Math.ceil((retryDate.getTime() - Date.now()) / 1000));
+          }
+          // Cap at 5 minutes max to avoid absurdly long waits
+          waitSeconds = Math.min(waitSeconds, 300);
+        }
 
         if (import.meta.env.DEV) console.log(`[Rate Limit] Retrying in ${waitSeconds}s (attempt ${attempt + 1}/${maxRetries})`);
 

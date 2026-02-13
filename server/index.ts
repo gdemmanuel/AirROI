@@ -109,6 +109,11 @@ app.get('/api/admin/costs', (_req, res) => {
   res.json(costTracker.getSummary());
 });
 
+app.get('/api/admin/cost-history', (_req, res) => {
+  console.log('[Server] Cost history requested');
+  res.json(costTracker.getHistory());
+});
+
 app.post('/api/admin/budget', (req, res) => {
   const { budget } = req.body;
   if (typeof budget !== 'number' || budget <= 0) {

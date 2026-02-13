@@ -3,6 +3,9 @@ import {
   Activity, Server, Clock, Database, Users, Zap, RefreshCw, Trash2,
   AlertTriangle, CheckCircle, XCircle, BarChart3, Shield, Cpu, HardDrive, HelpCircle, DollarSign, ExternalLink
 } from 'lucide-react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 // ============================================================================
 // TYPES
@@ -121,6 +124,7 @@ const AdminTab: React.FC = () => {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [clearing, setClearing] = useState<string | null>(null);
   const [costData, setCostData] = useState<any>(null);
+  const [costHistory, setCostHistory] = useState<any[]>([]);
   const [pricingInfo, setPricingInfo] = useState<any>(null);
   const [rateLimits, setRateLimits] = useState<any>(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -165,6 +169,18 @@ const AdminTab: React.FC = () => {
     }
   }, []);
 
+  const fetchCostHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/cost-history');
+      if (res.ok) {
+        const data = await res.json();
+        setCostHistory(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch cost history:', e);
+    }
+  }, []);
+
   const fetchPricing = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/pricing');
@@ -200,14 +216,16 @@ const AdminTab: React.FC = () => {
   useEffect(() => {
     fetchMetrics();
     fetchCosts();
+    fetchCostHistory();
     fetchPricing();
     fetchRateLimits();
     const interval = setInterval(() => {
       fetchMetrics();
       fetchCosts();
+      fetchCostHistory();
     }, 30000);
     return () => clearInterval(interval);
-  }, [fetchMetrics, fetchCosts, fetchPricing, fetchRateLimits]);
+  }, [fetchMetrics, fetchCosts, fetchCostHistory, fetchPricing, fetchRateLimits]);
 
   const handleClearCache = async (target: 'claude' | 'rentcast' | 'all') => {
     setClearing(target);
@@ -760,6 +778,82 @@ const AdminTab: React.FC = () => {
           </div>
           <div className="p-5">
             <p className="text-sm text-slate-500">Loading cost data...</p>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================== */}
+      {/* SECTION 2D: API Cost History Graph                                 */}
+      {/* ================================================================== */}
+      {costHistory.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <BarChart3 size={16} className="text-slate-400" />
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Cost History (Last 7 Days)</h3>
+            </div>
+          </div>
+          <div className="p-5">
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={costHistory.slice().reverse()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#64748b"
+                  tick={{ fontSize: 11, fontWeight: 600 }}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                />
+                <YAxis 
+                  stroke="#64748b"
+                  tick={{ fontSize: 11, fontWeight: 600 }}
+                  tickFormatter={(value) => `$${value.toFixed(2)}`}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 600
+                  }}
+                  formatter={(value: any) => [`$${value.toFixed(2)}`, '']}
+                  labelFormatter={(label) => {
+                    const date = new Date(label);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px', fontWeight: 600 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="totalCost" 
+                  stroke="#64748b" 
+                  strokeWidth={2}
+                  name="Total Cost"
+                  dot={{ fill: '#64748b', r: 4 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="claudeCost" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  name="Claude API"
+                  dot={{ fill: '#3b82f6', r: 4 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="rentcastCost" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  name="RentCast API"
+                  dot={{ fill: '#10b981', r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}

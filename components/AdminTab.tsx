@@ -142,6 +142,7 @@ const AdminTab: React.FC = () => {
   });
 
   const fetchMetrics = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/admin/metrics');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

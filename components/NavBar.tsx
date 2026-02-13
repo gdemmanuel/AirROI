@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Calculator, LayoutDashboard, BarChart3, Calendar, TrendingUp,
+  LayoutDashboard, BarChart3, Calendar, TrendingUp,
   Briefcase, Settings, Shield
 } from 'lucide-react';
 import { RentalStrategy } from '../types';
@@ -19,8 +19,8 @@ const NavBar: React.FC<NavBarProps> = ({ activeTab, setActiveTab, strategy, setS
       <div className="max-w-[1800px] mx-auto flex items-center justify-between gap-4">
         {/* Logo */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="p-1.5 bg-white rounded-lg text-slate-900"><Calculator size={18} /></div>
-          <h1 className="text-lg font-black tracking-tighter uppercase leading-none hidden sm:block">AirROI <span className="text-[#f43f5e]">PRO</span></h1>
+          <img src="/logo.png" alt="Analyze My Property" className="h-8 w-8 object-contain" />
+          <h1 className="text-sm font-black tracking-tighter uppercase leading-none hidden sm:block">Analyze My <span className="text-[#4CAF50]">Property</span></h1>
         </div>
 
         {/* Navigation Tabs */}

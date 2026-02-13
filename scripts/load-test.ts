@@ -371,7 +371,7 @@ async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║                                                                           ║
-║                   AirROI Multi-User Load Testing                          ║
+║               Analyze My Property Multi-User Load Testing                   ║
 ║                                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
   `);

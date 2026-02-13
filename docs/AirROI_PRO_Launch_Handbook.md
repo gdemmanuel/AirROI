@@ -1,7 +1,7 @@
-# AirROI PRO Launch Handbook
-**Real Estate Investment Intelligence Platform**
+# Analyze My Property Launch Handbook
+**AI-Powered Real Estate Investment Analysis Platform**
 
-**Version:** 2.1
+**Version:** 2.2
 **Date:** February 2026  
 **Document Type:** Product Launch Guide
 
@@ -29,7 +29,7 @@
 ## 1. Product Vision & Positioning
 
 ### Vision Statement
-AirROI PRO empowers real estate investors to make data-driven acquisition decisions for short-term rental (STR), mid-term rental (MTR), and long-term rental (LTR) properties with AI-powered underwriting, real-time market data, and comprehensive financial projections.
+Analyze My Property empowers real estate investors to make data-driven acquisition decisions for short-term rental (STR), mid-term rental (MTR), and long-term rental (LTR) properties with AI-powered underwriting, real-time market data, and comprehensive financial projections.
 
 ### Target Market
 
@@ -498,12 +498,12 @@ VITE_GOOGLE_MAPS_API_KEY=your-key-here
 ### Prerequisites
 
 - Node.js 18+ installed
-- GitHub repository connected: `https://github.com/gdemmanuel/AirROI.git`
+- GitHub repository connected: `https://github.com/gdemmanuel/analyze-my-property.git`
 - API keys: `ANTHROPIC_API_KEY`, `RENTCAST_API_KEY`
 
 ### How It Works in Production
 
-AirROI runs as a **single Express server** that:
+Analyze My Property runs as a **single Express server** that:
 1. Serves the built frontend from `dist/` (static files)
 2. Proxies API requests to Claude and RentCast
 3. Handles auth, caching, rate limiting, queue management, cost tracking, and admin metrics
@@ -514,7 +514,7 @@ AirROI runs as a **single Express server** that:
 
 **Why Railway**: Always-on server ($5/mo), in-memory state persists (sessions, caches, queue, cost tracking), zero code changes needed, auto-deploy from GitHub.
 
-**Why NOT Vercel**: AirROI relies on an always-on Express server with in-memory state (sessions, caches, queue, cost tracking). Vercel converts Express to serverless functions, resetting all state on every invocation. This would break auth, caching, rate limiting, queue management, and cost tracking. Significant refactoring would be required.
+**Why NOT Vercel**: Analyze My Property relies on an always-on Express server with in-memory state (sessions, caches, queue, cost tracking). Vercel converts Express to serverless functions, resetting all state on every invocation. This would break auth, caching, rate limiting, queue management, and cost tracking. Significant refactoring would be required.
 
 **Step 1: Verify production start script exists in package.json**
 This should already be present:
@@ -816,6 +816,6 @@ settings/
 
 ---
 
-**Document prepared for AirROI PRO Launch**
+**Document prepared for Analyze My Property Launch**
 **Last Updated:** February 13, 2026
 **Version:** 2.1

@@ -79,7 +79,7 @@ const LenderPacketExport: React.FC<LenderPacketExportProps> = ({ packet, isLoadi
       <body>
         <div class="header">
           <h1>Professional Investment Analysis</h1>
-          <p class="subtitle">Prepared by AirROI PRO • ${packet.generatedDate}</p>
+          <p class="subtitle">Prepared by Analyze My Property • ${packet.generatedDate}</p>
         </div>
 
         <!-- Executive Summary -->
@@ -331,7 +331,7 @@ const LenderPacketExport: React.FC<LenderPacketExportProps> = ({ packet, isLoadi
         ` : ''}
 
         <div class="footer">
-          <p><strong>AirROI PRO</strong> • Professional Short-Term Rental Investment Analysis Platform</p>
+          <p><strong>Analyze My Property</strong> • Professional Short-Term Rental Investment Analysis Platform</p>
           <p>This document is for informational purposes only and does not constitute financial or investment advice. All projections are estimates based on current market conditions and assumptions.</p>
         </div>
       </body>

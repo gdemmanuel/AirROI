@@ -246,7 +246,7 @@ export const exportUnderwritingReport = (params: ExportReportParams) => {
         </div>
       </div>
     ` : ''}
-    <p><strong>AirROI PRO</strong> • Property Investment Analysis Platform</p>
+    <p><strong>Analyze My Property</strong> • Property Investment Analysis Platform</p>
     <p>This report is for informational purposes only and does not constitute financial advice.</p>
   </div>
 </body>

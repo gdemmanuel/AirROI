@@ -32,12 +32,17 @@ import {
 // ============================================================================
 // Sonnet 4: Complex financial analysis requiring strong reasoning
 // Haiku: Fast & cheap for conversational/simple tasks
-type ModelType = 'complex_analysis' | 'simple_task';
+type ModelType = 'complex_analysis' | 'simple_task' | 'premium_analysis';
 
 function getModel(taskType: ModelType): string {
-  if (taskType === 'complex_analysis') {
+  if (taskType === 'premium_analysis') {
+    // Only for most complex comparative analyses (market discovery, comp scoring)
     return 'claude-sonnet-4-20250514';
+  } else if (taskType === 'complex_analysis') {
+    // Main property analysis - use Haiku for cost efficiency
+    return 'claude-3-5-haiku-20241022';
   } else {
+    // Simple tasks - use Haiku
     return 'claude-3-5-haiku-20241022';
   }
 }
@@ -795,7 +800,7 @@ export const discoverMarkets = async (input: MarketDiscoveryInput): Promise<Mark
   try {
     if (import.meta.env.DEV) console.log('[Claude] Discovering markets for budget:', input.budget);
     const content = await claudeProxy({
-      model: getModel('complex_analysis'),
+      model: getModel('premium_analysis'), // Use Sonnet-4 for complex market comparison
       max_tokens: 4096,
       tools: [{ type: "web_search_20250305", name: "web_search" }],
       messages: [{ role: 'user', content: MARKET_DISCOVERY_PROMPT(input) }]
@@ -814,7 +819,7 @@ export const scoreCompStrength = async (
   try {
     if (import.meta.env.DEV) console.log('[Claude] Scoring comp strength');
     const content = await claudeProxy({
-      model: getModel('complex_analysis'),
+      model: getModel('premium_analysis'), // Use Sonnet-4 for nuanced comparison
       max_tokens: 2048,
       messages: [{ role: 'user', content: COMPS_STRENGTH_PROMPT(comps, subject) }]
     });

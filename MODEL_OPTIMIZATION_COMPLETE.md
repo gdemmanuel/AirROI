@@ -1,7 +1,10 @@
 # Model Optimization Implementation - Cost Reduction
 
+## ⚠️ REVISED STRATEGY - February 12, 2026
+After initial testing, we found that Haiku did not provide sufficient depth for critical sections (Snapshot, Regulations, Break-even, Recommendations). **Revised to use Sonnet-4 for all core analysis, Haiku only for simple tasks.**
+
 ## Overview
-Implemented a three-tier model strategy to reduce API costs by 60-70% while maintaining high-quality analysis.
+Implemented a two-tier model strategy to reduce API costs by 30-40% while maintaining full analytical quality.
 
 ## Implementation Date
 February 12, 2026
@@ -17,9 +20,9 @@ February 12, 2026
 
 **Cost:** ~$0.01-0.02 per call
 
-### Tier 2: Core Analysis (Haiku - $1/$5 per M tokens)
+### Tier 2: Core Analysis (Sonnet-4 - $3/$15 per M tokens)
 **Use Cases:**
-- Main property analysis (`analyzeProperty`)
+- Main property analysis (`analyzeProperty`) - Snapshot, Regulations, Break-even, Recommendations
 - Property audits (`runPropertyAudit`)
 - Underwriting analysis (`runUnderwriteAnalysis`)
 - Sensitivity analysis (`runSensitivityAnalysis`)
@@ -29,7 +32,8 @@ February 12, 2026
 - Path to yes calculations (`calculatePathToYes`)
 - Web-based STR data searches
 
-**Cost:** ~$0.03-0.05 per analysis
+**Cost:** ~$0.08-0.12 per analysis
+**Rationale:** These require deep analytical insights, nuanced recommendations, and comprehensive breakdowns that justify the premium model.
 
 ### Tier 3: Premium Analysis (Sonnet-4 - $3/$15 per M tokens)
 **Use Cases:**
@@ -47,35 +51,47 @@ February 12, 2026
   - RentCast: ~$0.06 per property
   - Typical assessment: 2 Claude calls = ~$0.60
 
-### After Optimization
-- **Per Assessment:** $0.05-0.08
+### After Optimization (Revised Strategy)
+- **Per Assessment:** $0.08-0.12
 - **Breakdown:**
-  - Claude (Haiku): ~$0.05-0.08 per analysis
+  - Claude (Sonnet-4 for main analysis): ~$0.08-0.12 per analysis
+  - Claude (Haiku for simple tasks): ~$0.01 per call
   - RentCast: ~$0.06 per property
-  - Typical assessment: 2 Haiku calls = ~$0.10-0.16
-  - Premium features (market discovery): +$0.10-0.15 only when used
+  - Typical assessment: 1-2 Sonnet calls + Haiku helpers = ~$0.10-0.18
 
 ### Cost Reduction
-- **Standard Analysis:** 60-70% reduction
+- **Standard Analysis:** 30-40% reduction (vs all-Sonnet approach)
+- **Quality:** Full depth maintained for critical analyses
 - **Daily Budget Impact:** 
   - Previous: ~$50/day = 250-333 assessments
-  - New: ~$50/day = 625-1000 assessments
+  - New: ~$50/day = 400-500 assessments
 
 ## Quality Considerations
 
-### Haiku Capabilities
-Claude 3.5 Haiku is highly capable for:
-- ✅ Structured financial analysis
-- ✅ ROI calculations and projections
-- ✅ Market data interpretation
-- ✅ JSON output formatting
-- ✅ Following detailed prompts
-- ✅ Fast response times (200-300ms)
+### Revised Strategy - Best of Both Worlds
+After testing, we found that critical sections (Snapshot, Regulations, Break-even, Recommendations) require Sonnet-4's analytical depth. The revised strategy uses:
+
+**Sonnet-4 for Core Analysis:**
+- ✅ Deep market insights
+- ✅ Comprehensive regulatory analysis
+- ✅ Nuanced recommendations
+- ✅ Detailed break-even scenarios
+- ✅ Strategic investment guidance
+
+**Haiku for Simple Tasks:**
+- ✅ Fast address suggestions
+- ✅ Quick amenity estimates
+- ✅ Title generation
+- ✅ Simple data extraction
+
+This hybrid approach maintains quality while reducing costs by 30-40% through strategic use of Haiku for non-analytical tasks.
 
 ### Sonnet-4 Reserved For
+- 🎯 Property analysis with insights and recommendations
+- 🎯 Complex underwriting calculations
+- 🎯 Regulatory scanning and compliance
 - 🎯 Multi-dimensional market comparisons
-- 🎯 Complex comparative scoring with many variables
-- 🎯 Advanced market intelligence requiring broader context
+- 🎯 Advanced market intelligence
 
 ## Technical Changes
 
@@ -84,10 +100,9 @@ Claude 3.5 Haiku is highly capable for:
 
 ### Key Changes
 1. Added `premium_analysis` model type
-2. Updated `getModel()` function to return Haiku for `complex_analysis`
-3. Reserved Sonnet-4 only for `premium_analysis` tier
-4. Updated `discoverMarkets()` to use `premium_analysis`
-5. Updated `scoreCompStrength()` to use `premium_analysis`
+2. **Kept Sonnet-4 for `complex_analysis`** (main property analysis, underwriting, regulations)
+3. Use Haiku only for `simple_task` (address suggestions, amenity estimates)
+4. Use Sonnet-4 for `premium_analysis` (market discovery, comp scoring)
 
 ### Code Example
 ```typescript
@@ -95,13 +110,13 @@ type ModelType = 'complex_analysis' | 'simple_task' | 'premium_analysis';
 
 function getModel(taskType: ModelType): string {
   if (taskType === 'premium_analysis') {
-    // Only for most complex comparative analyses
+    // For most complex comparative analyses
     return 'claude-sonnet-4-20250514';
   } else if (taskType === 'complex_analysis') {
-    // Main property analysis - use Haiku for cost efficiency
-    return 'claude-3-5-haiku-20241022';
+    // Main property analysis, underwriting - use Sonnet-4 for depth
+    return 'claude-sonnet-4-20250514';
   } else {
-    // Simple tasks - use Haiku
+    // Simple tasks - use Haiku for speed and cost
     return 'claude-3-5-haiku-20241022';
   }
 }
@@ -128,22 +143,22 @@ function getModel(taskType: ModelType): string {
 
 ### Typical Property Assessment Flow
 1. **Property Search** → Haiku (simple_task) - $0.001
-2. **Main Analysis** → Haiku (complex_analysis) - $0.04
-3. **Underwriting** → Haiku (complex_analysis) - $0.03
+2. **Main Analysis** → Sonnet-4 (complex_analysis) - $0.10
+3. **Underwriting** → Sonnet-4 (complex_analysis) - $0.08
 4. **Amenity Suggestions** → Haiku (simple_task) - $0.01
 5. **Market Discovery** (optional) → Sonnet-4 (premium_analysis) - $0.12
 
-**Total Standard Assessment:** ~$0.08 (60-70% savings)
-**Total with Premium Features:** ~$0.20 (same as before, but optional)
+**Total Standard Assessment:** ~$0.10-0.12 (30-40% savings vs all-Sonnet)
+**Total with Premium Features:** ~$0.20-0.25
 
 ## Rollback Plan
 
-If quality issues arise, revert by changing line 40 in `claudeService.ts`:
+If issues arise, revert by changing line 40-44 in `claudeService.ts`:
 
 ```typescript
-// Rollback: Use Sonnet-4 for complex analysis
-if (taskType === 'complex_analysis') {
-  return 'claude-sonnet-4-20250514';
+// Full rollback to original all-Sonnet approach
+function getModel(taskType: ModelType): string {
+  return 'claude-sonnet-4-20250514'; // Use Sonnet for everything
 }
 ```
 
@@ -157,7 +172,8 @@ if (taskType === 'complex_analysis') {
 
 ## Notes
 
-- Haiku processes requests 2-3x faster than Sonnet-4
-- Reduced token costs also reduce rate limit pressure
-- Can serve more users with same budget
-- Premium features remain available when needed
+- Sonnet-4 provides the analytical depth needed for Snapshot, Regulations, Break-even, and Recommendations
+- Haiku is reserved for simple, non-analytical tasks (address lookup, quick estimates)
+- 30-40% cost savings vs all-Sonnet approach
+- Can serve more users with same budget while maintaining quality
+- Premium features use same Sonnet-4 model for consistency

@@ -36,13 +36,13 @@ type ModelType = 'complex_analysis' | 'simple_task' | 'premium_analysis';
 
 function getModel(taskType: ModelType): string {
   if (taskType === 'premium_analysis') {
-    // Only for most complex comparative analyses (market discovery, comp scoring)
+    // For most complex comparative analyses (market discovery, comp scoring)
     return 'claude-sonnet-4-20250514';
   } else if (taskType === 'complex_analysis') {
-    // Main property analysis - use Haiku for cost efficiency
-    return 'claude-3-5-haiku-20241022';
+    // Main property analysis, underwriting, regulations - use Sonnet-4 for depth
+    return 'claude-sonnet-4-20250514';
   } else {
-    // Simple tasks - use Haiku
+    // Simple tasks - use Haiku for speed and cost
     return 'claude-3-5-haiku-20241022';
   }
 }

@@ -12,8 +12,8 @@
 // Anthropic API pricing (as of Feb 2026)
 const CLAUDE_PRICING = {
   'claude-sonnet-4': {
-    inputPerMToken: 15.0,   // $15 per 1M input tokens
-    outputPerMToken: 75.0,  // $75 per 1M output tokens
+    inputPerMToken: 3.0,    // $3.00 per 1M input tokens
+    outputPerMToken: 15.0,  // $15.00 per 1M output tokens
   },
   'claude-3-5-haiku': {
     inputPerMToken: 0.8,    // $0.80 per 1M input tokens

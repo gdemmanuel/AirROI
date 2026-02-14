@@ -1,7 +1,7 @@
 # Analyze My Property Launch Handbook
 **AI-Powered Real Estate Investment Analysis Platform**
 
-**Version:** 2.2
+**Version:** 2.3
 **Date:** February 2026  
 **Document Type:** Product Launch Guide
 
@@ -545,8 +545,12 @@ Railway auto-detects Node.js. Set:
 **Step 5: Deploy**
 Push to master — Railway auto-deploys. URL assigned automatically (e.g., `airroi.up.railway.app`).
 
-**Step 6: Custom domain (optional)**
-Railway Dashboard > Settings > Domains > Add custom domain.
+**Step 6: Custom domain**
+1. Railway Dashboard → Settings → Domains → "+ Custom Domain"
+2. Enter your domain (use `www.yourdomain.com` if root domain CNAME isn't supported)
+3. Add the CNAME and TXT records Railway provides to your DNS provider
+4. Wait 5-30 minutes for DNS propagation and SSL certificate provisioning
+5. Update `CORS_ORIGIN` to include your custom domain
 
 ### What Happens Automatically in Production
 
@@ -756,13 +760,14 @@ settings/
 
 ### Next Phases
 
-**Phase 16: Production Deployment**
-- `start` script added to `package.json` — DONE
-- `PORT` env var handling fixed for Railway — DONE
-- Deploy to Railway
-- Configure environment variables and custom domain
-- Verify health check, admin dashboard, and first search
-- Confirm test routes disabled (`GET /api/test/health` returns 403)
+**Phase 16: Production Deployment** ✅ COMPLETE
+- `start` script added to `package.json` — ✅ DONE
+- `PORT` env var handling fixed for Railway — ✅ DONE
+- Deployed to Railway at `analyze-my-property-production.up.railway.app` — ✅ DONE
+- Environment variables configured (API keys, NODE_ENV, CORS_ORIGIN) — ✅ DONE
+- Custom domain `www.analyzemyproperty.com` configured (DNS propagating) — ✅ DONE
+- Health check verified, server running successfully — ✅ DONE
+- Test routes disabled in production — ✅ DONE
 
 **Phase 17: Real Authentication (Supabase)**
 - Replace session auth with Supabase Auth for persistent user accounts
@@ -817,5 +822,5 @@ settings/
 ---
 
 **Document prepared for Analyze My Property Launch**
-**Last Updated:** February 13, 2026
-**Version:** 2.1
+**Last Updated:** February 14, 2026
+**Version:** 2.3
